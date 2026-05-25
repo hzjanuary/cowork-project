@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { TestContext } from '../context/TestContext.js';
+import { TestContext } from '../context/TestContext.jsx';
 
 const useTest = () => {
     return useContext(TestContext);

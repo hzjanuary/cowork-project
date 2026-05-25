@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext.js';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth.js';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import {} from '@mui/material'
-import {} from 'antd'
+import { Box, Container, TextField, Button, Typography, CircularProgress, InputAdornment, IconButton } from '@mui/material';
+import { Form, Input, Button as AntButton, Spin } from 'antd';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 
 const Register = () => {
     const { register } = useAuth();
@@ -86,10 +87,11 @@ const Register = () => {
             const response = await register({
                 username,
                 email,
-                password
+                password,
+                confirmPassword
             });
 
-            toast.success('Registration successful! Redirecting to login...');
+            toast.success('Registration successful! Check your email for verification code.');
             
             // Clear form
             setUsername('');
@@ -97,11 +99,13 @@ const Register = () => {
             setPassword('');
             setConfirmPassword('');
 
-            // Redirect to login after a short delay
+            // Redirect to OTP verification page
             setTimeout(() => {
-                navigate('/login');
+                navigate('/verify-otp', { state: { email } });
             }, 1500);
         } catch (error) {
+            console.error('Registration error:', error);
+            console.error('Response data:', error.response?.data);
             const errorMessage = error.response?.data?.message || error.message || 'Registration failed. Please try again.';
             toast.error(errorMessage);
         } finally {
@@ -110,7 +114,131 @@ const Register = () => {
     }
 
     return (
-        <div></div>
-    )
+        <Container maxWidth="sm">
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '100vh',
+                    py: 4,
+                }}
+            >
+                <Box sx={{ width: '100%', mb: 3 }}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1, textAlign: 'center' }}>
+                        Create Account
+                    </Typography>
+                    <Typography variant="body2" sx={{ textAlign: 'center', color: 'textSecondary' }}>
+                        Join us today to get started
+                    </Typography>
+                </Box>
+
+                <Spin spinning={isLoading} description="Registering...">
+                    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {/* Username Field */}
+                        <TextField
+                            label="Username"
+                            variant="outlined"
+                            fullWidth
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Enter your username"
+                            onBlur={() => validateForm('username')}
+                            disabled={isLoading}
+                            autoComplete="username"
+                        />
+
+                        {/* Email Field */}
+                        <TextField
+                            label="Email"
+                            type="email"
+                            variant="outlined"
+                            fullWidth
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Enter your email"
+                            onBlur={() => validateForm('email')}
+                            disabled={isLoading}
+                        />
+
+                        {/* Password Field */}
+                        <TextField
+                            label="Password"
+                            type={showPassword ? 'text' : 'password'}
+                            variant="outlined"
+                            fullWidth
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            onBlur={() => validateForm('password')}
+                            disabled={isLoading}
+                            inputprops={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={toggleShowPassword}
+                                            edge="end"
+                                            disabled={isLoading}
+                                        >
+                                            {showPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                            autoComplete="new-password"
+                        />
+
+                        {/* Confirm Password Field */}
+                        <TextField
+                            label="Confirm Password"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            variant="outlined"
+                            fullWidth
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Re-enter your password"
+                            onBlur={() => validateForm('confirmPassword')}
+                            disabled={isLoading}
+                            inputprops={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={toggleShowConfirmPassword}
+                                            edge="end"
+                                            disabled={isLoading}
+                                        >
+                                            {showConfirmPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                            autoComplete="new-password"
+                        />
+
+                        {/* Submit Button */}
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            fullWidth
+                            size="large"
+                            disabled={isLoading}
+                            sx={{ mt: 2 }}
+                        >
+                            {isLoading ? 'Registering...' : 'Register'}
+                        </Button>
+
+                        {/* Login Link */}
+                        <Typography variant="body2" sx={{ textAlign: 'center', mt: 2 }}>
+                            Already have an account?{' '}
+                            <Link to="/login" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 'bold' }}>
+                                Login here
+                            </Link>
+                        </Typography>
+                    </Box>
+                </Spin>
+            </Box>
+        </Container>
+    );
 }
 export default Register;

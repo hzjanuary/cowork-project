@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext.js';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth.js';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { } from '@mui/material'
-import { } from 'antd'
+import { Box, Container, TextField, Button, Typography, InputAdornment, IconButton } from '@mui/material';
+import { Spin } from 'antd';
+import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 
 const Login = () => {
     const { login } = useAuth();
@@ -50,12 +51,10 @@ const Login = () => {
             setIsLoading(true);
             const response = await login({ username, password });
 
-            toast.success('Login successful!');
+            toast.success('Login successful! Redirecting...');
 
             setUsername('');
-            setEmail('');
             setPassword('');
-            setConfirmPassword('');
 
             setTimeout(() => {
                 navigate('/');
@@ -69,7 +68,89 @@ const Login = () => {
     }
 
     return (
-        <div></div>
+        <Container maxWidth="sm">
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    minHeight: '100vh',
+                    py: 4,
+                }}
+            >
+                <Box sx={{ width: '100%', mb: 3 }}>
+                    <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1, textAlign: 'center' }}>
+                        Welcome Back
+                    </Typography>
+                    <Typography variant="body2" sx={{ textAlign: 'center', color: 'textSecondary' }}>
+                        Sign in to your account to continue
+                    </Typography>
+                </Box>
+
+                <Spin spinning={isLoading} tip="Logging in...">
+                    <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {/* Username Field */}
+                        <TextField
+                            label="Username"
+                            variant="outlined"
+                            fullWidth
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="Enter your username"
+                            onBlur={() => validateForm('username')}
+                            disabled={isLoading}
+                        />
+
+                        {/* Password Field */}
+                        <TextField
+                            label="Password"
+                            type={showPassword ? 'text' : 'password'}
+                            variant="outlined"
+                            fullWidth
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            onBlur={() => validateForm('password')}
+                            disabled={isLoading}
+                            InputProps={{
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton
+                                            onClick={toggleShowPassword}
+                                            edge="end"
+                                            disabled={isLoading}
+                                        >
+                                            {showPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+
+                        {/* Submit Button */}
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            fullWidth
+                            size="large"
+                            disabled={isLoading}
+                            sx={{ mt: 2 }}
+                        >
+                            {isLoading ? 'Logging in...' : 'Login'}
+                        </Button>
+
+                        {/* Register Link */}
+                        <Typography variant="body2" sx={{ textAlign: 'center', mt: 2 }}>
+                            Don't have an account?{' '}
+                            <Link to="/register" style={{ textDecoration: 'none', color: '#1976d2', fontWeight: 'bold' }}>
+                                Register here
+                            </Link>
+                        </Typography>
+                    </Box>
+                </Spin>
+            </Box>
+        </Container>
     )
 }
 

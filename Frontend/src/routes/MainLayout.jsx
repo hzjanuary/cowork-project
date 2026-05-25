@@ -1,7 +1,7 @@
 import React from 'react';
-import { useTheme } from './hooks/useTheme.js';
-import Header from './components/Header.jsx';
-import Footer from './components/Footer.jsx';
+import { useTheme } from '../hooks/useTheme.js';
+import Header from '../components/Header.jsx';
+import Footer from '../components/Footer.jsx';
 
 const MainLayout = ({ children }) => {
     const { theme } = useTheme();
