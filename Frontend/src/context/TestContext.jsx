@@ -60,6 +60,48 @@ export const TestProvider = ({ children }) => {
         }
     }
 
+    const startTest = async (testId) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const res = await instance.post(`/api/tests/start/${testId}`);
+            return res.data;
+        } catch (err) {
+            setError(err.response?.data?.message || err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const submitTest = async (testId, answers) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const res = await instance.post(`/api/tests/submit/${testId}`, { answers });
+            return res.data;
+        } catch (err) {
+            setError(err.response?.data?.message || err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const getTestResults = async (testId) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const res = await instance.get(`/api/tests/results/${testId}`);
+            return res.data;
+        } catch (err) {
+            setError(err.response?.data?.message || err.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     const updateTest = async (testId, { title, timeLimit, visibility }) => {
         setIsLoading(true);
         setError(null);
@@ -106,7 +148,8 @@ export const TestProvider = ({ children }) => {
             getAllTests,
             getTestById,
             updateTest,
-            deleteTest
+            deleteTest,
+            startTest
         }}>
             {children}
         </TestContext.Provider>

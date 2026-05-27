@@ -9,5 +9,8 @@ testsRouter.get('/', authToken, testController.getAllTests);
 testsRouter.get('/:id', authToken, testController.getTestById);
 testsRouter.put('/:id', authToken, testController.updateTest);
 testsRouter.delete('/:id', authToken, testController.deleteTest);
+testsRouter.post('/tests/:testId/start', authToken, testController.startTest);
+testsRouter.post('/test-attempts/submit', authToken, testController.submitTest);
+testsRouter.get('/test-attempts/:testAttemptId/results', authToken, testController.getTestResults);
 
 export default testsRouter;

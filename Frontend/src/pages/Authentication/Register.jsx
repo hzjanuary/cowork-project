@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuth } from '../../hooks/useAuth.js';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Box, Container, TextField, Button, Typography, CircularProgress, InputAdornment, IconButton } from '@mui/material';
+import { Box, TextField, Button, Typography, InputAdornment, IconButton } from '@mui/material';
 import { Form, Input, Button as AntButton, Spin } from 'antd';
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 
@@ -114,17 +114,16 @@ const Register = () => {
     }
 
     return (
-        <Container maxWidth="sm">
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '100vh',
-                    py: 4,
-                }}
-            >
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100vh'
+            }}
+        >
                 <Box sx={{ width: '100%', mb: 3 }}>
                     <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1, textAlign: 'center' }}>
                         Create Account
@@ -237,8 +236,7 @@ const Register = () => {
                         </Typography>
                     </Box>
                 </Spin>
-            </Box>
-        </Container>
+        </Box>
     );
 }
 export default Register;

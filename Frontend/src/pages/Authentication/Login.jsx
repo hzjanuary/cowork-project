@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuth } from '../../hooks/useAuth.js';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Box, Container, TextField, Button, Typography, InputAdornment, IconButton } from '@mui/material';
+import { Box, TextField, Button, Typography, InputAdornment, IconButton } from '@mui/material';
 import { Spin } from 'antd';
 import { EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 
 const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
-
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -60,7 +59,20 @@ const Login = () => {
                 navigate('/');
             }, 1500);
         } catch (error) {
-            const errorMessage = error.response?.data?.message || error.message || 'Login failed. Please try again.';
+            console.error('Login error caught:', error);
+            console.error('Error response data:', error.response?.data);
+            
+            let errorMessage = 'Login failed. Please try again.';
+            
+            // Try to extract error message from different sources
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.response?.data?.error) {
+                errorMessage = error.response.data.error;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
             toast.error(errorMessage);
         } finally {
             setIsLoading(false);
@@ -68,17 +80,16 @@ const Login = () => {
     }
 
     return (
-        <Container maxWidth="sm">
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    minHeight: '100vh',
-                    py: 4,
-                }}
-            >
+        <Box
+            sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100vh'
+            }}
+        >
                 <Box sx={{ width: '100%', mb: 3 }}>
                     <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold', mb: 1, textAlign: 'center' }}>
                         Welcome Back
@@ -88,7 +99,7 @@ const Login = () => {
                     </Typography>
                 </Box>
 
-                <Spin spinning={isLoading} tip="Logging in...">
+                <Spin spinning={isLoading} description="Logging in...">
                     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 2 }}>
                         {/* Username Field */}
                         <TextField
@@ -100,6 +111,7 @@ const Login = () => {
                             placeholder="Enter your username"
                             onBlur={() => validateForm('username')}
                             disabled={isLoading}
+                            autoComplete="username"
                         />
 
                         {/* Password Field */}
@@ -113,7 +125,8 @@ const Login = () => {
                             placeholder="Enter your password"
                             onBlur={() => validateForm('password')}
                             disabled={isLoading}
-                            InputProps={{
+                            autoComplete="current-password"
+                            inputprops={{
                                 endAdornment: (
                                     <InputAdornment position="end">
                                         <IconButton
@@ -149,8 +162,7 @@ const Login = () => {
                         </Typography>
                     </Box>
                 </Spin>
-            </Box>
-        </Container>
+        </Box>
     )
 }
 

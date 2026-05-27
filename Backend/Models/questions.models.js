@@ -8,20 +8,19 @@ const optionSchema = new mongoose.Schema({
 });
 
 const questionSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users" },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
   sourceFile: { type: mongoose.Schema.Types.ObjectId, ref: "FileUploads" },
   testId: { type: mongoose.Schema.Types.ObjectId, ref: "Tests" },
 
   questionText: { type: String, required: true },
-  type: { type: String, enum: ["multiple_choice", "true_false", "short_answer"] },
+  type: { type: String, enum: ["multiple_choice", "true_false", "short_answer"], required: true },
   options: [optionSchema],
-  answer: { type: String, required: true },
+  answer: String,
 
   difficulty: { type: String, enum: ["easy", "medium", "hard"] },
-  verified: { type: Boolean, default: false },
-
-  createdAt: { type: Date, default: Date.now }
-});
+  status: { type: String, enum: ["draft", "pending_verification", "verified"], default: "draft" },
+  verified: { type: Boolean, default: false }
+}, { timestamps: true });
 
 const questionModel = mongoose.model("Questions", questionSchema);
 export default questionModel;

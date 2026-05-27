@@ -31,6 +31,8 @@ export const AuthProvider = ({ children }) => {
             setIsAuthenticated(true);
             return account;
         } catch (error) {
+            console.error('Login API error:', error);
+            console.error('Error response:', error.response?.data);
             throw error
         }
     }
@@ -62,8 +64,16 @@ export const AuthProvider = ({ children }) => {
     }
 
     const verifyOtp = async (email, pin) => {
-        const res = await instance.post('/api/accounts/verify-otp', { email, pin });
-        return res.data;
+        try {
+            console.log('Verifying OTP:', { email, pin: '***' });
+            const res = await instance.post('/api/accounts/verify-otp', { email, pin });
+            console.log('OTP verification response:', res.data);
+            return res.data;
+        } catch (error) {
+            console.error('OTP verification error:', error);
+            console.error('Error response:', error.response);
+            throw error;
+        }
     }
 
     const resetPassword = async (email, newPassword, confirmPassword) => {

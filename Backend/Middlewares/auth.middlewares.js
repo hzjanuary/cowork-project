@@ -1,5 +1,6 @@
 import accountModel from "../Models/accounts.models.js";
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
 
 export const registerValidation = async (req, res, next) => {
     try {
@@ -38,7 +39,7 @@ export const authToken = async (req, res, next) => {
             return res.status(400).json({ message: 'No token. Access denied!' })
         }
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
+        const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY)
         const account = await accountModel.findById(decoded.accountId)
 
         if (!account) {
@@ -103,6 +104,32 @@ export const checkAdmin = async (req, res, next) => {
         if(!req.account.isAdmin) return res.status(403).json({ message: 'Only administrators can access this feature!' })
 
         next()
+    } catch (error) {
+        return res.status(500).json({
+            message: "Internal server error.",
+            error: error.message
+        });
+    }
+}
+
+export const checkModerator = async (req, res, next) => {
+    try {
+        if(!req.account) return res.status(401).json({ message: 'Access denied!' })
+
+        if(!req.account.isModerator) return res.status(403).json({ message: 'Only moderators can access this feature!' })
+    } catch (error) {
+        return res.status(500).json({
+            message: "Internal server error.",
+            error: error.message
+        });
+    }
+}
+
+export const checkTeacher = async (req, res, next) => {
+    try {
+        if(!req.account) return res.status(401).json({ message: 'Access denied!' })
+
+        if(!req.account.isTeacher) return res.status(403).json({ message: 'Only teachers can access this feature!' })
     } catch (error) {
         return res.status(500).json({
             message: "Internal server error.",

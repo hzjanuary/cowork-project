@@ -41,7 +41,7 @@ const accountsController = {
 
             res.json(result)
         } catch (error) {
-            res.status(500).json({ error: error.message })
+            res.status(500).json({ message: error.message })
         }
     },
     verifyOtp: async (req, res) => {
@@ -52,7 +52,7 @@ const accountsController = {
 
             res.json(result)
         } catch (error) {
-            res.status(400).json({ error: error.message })
+            res.status(400).json({ message: error.message })
         }
     },
     forgetPassword: async (req, res) => {
@@ -67,7 +67,7 @@ const accountsController = {
             await sendResetPasswordOtp(normalizedEmail)
             return res.status(200).json({ message: 'Reset password OTP has been sent to email!' })
         } catch (error) {
-            res.status(400).json({ error: error.message })
+            res.status(400).json({ message: error.message })
         }
     },
     resetPassword: async (req, res) => {
@@ -81,7 +81,7 @@ const accountsController = {
             const exist = await accountsModel.findOne({ email: normailizedEmail })
             if (!exist) return res.status(404).json({ message: 'Account not found!' })
         } catch (error) {
-            return res.status(500).json({ error: error.message })
+            return res.status(500).json({ message: error.message })
         }
     },
     loginAccount: async (req, res) => {
@@ -108,7 +108,7 @@ const accountsController = {
                 } 
             })
         } catch (error) {
-            res.status(500).json({ error: error.message })
+            res.status(500).json({ message: error.message })
         }
     },
     getAllAccounts: async (req, res) => {
@@ -116,7 +116,7 @@ const accountsController = {
             const accounts = await accountsModel.find().select('-password')
             return res.status(200).json(accounts)
         } catch (error) {
-            res.status(500).json({ error: error.message })
+            res.status(500).json({ message: error.message })
         }
     },
     getAccountById: async (req, res) => {
@@ -127,7 +127,7 @@ const accountsController = {
             if (!account) return res.status(404).json({ message: 'Account not found!' })
             return res.status(200).json(account)
         } catch (error) {
-            res.status(500).json({ error: error.message })
+            res.status(500).json({ message: error.message })
         }
     }
 }

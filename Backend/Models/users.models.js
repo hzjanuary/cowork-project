@@ -6,7 +6,11 @@ const userSchema = new mongoose.Schema({
     dateOfBirth: { type: Date, required: true },
     fullName: { type: String, required: true },
     age: { type: Number, required: true },
-})
+    avatar: {
+        type: String,
+        default: null
+    }
+}, { timestamps: true })
 
 const userModel = mongoose.model('Users', userSchema)
 

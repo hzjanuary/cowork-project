@@ -9,7 +9,7 @@ import accountModel from "../Models/accounts.models.js";
 export const sendOtpByType = async (email, type, emailFn) => {
     const pin = PIN4Generator()
 
-    const hashedPin = await bcrypt.hash(pin, 10)
+    const hashedPin = await bcrypt.hash(String(pin), 10)
 
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
 

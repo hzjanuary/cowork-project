@@ -118,6 +118,21 @@ export const QuestionProvider = ({ children }) => {
         }
     }
 
+    const answerQuestion = async (questionId, answer) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const res = await instance.post(`/api/questions/answer/${questionId}`, { answer });
+            return res.data;
+        } catch (error) {
+            setError(error.response?.data?.message || error.message);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     return (
         <QuestionContext.Provider value={{
             questions,
@@ -129,7 +144,8 @@ export const QuestionProvider = ({ children }) => {
             getQuestionsByUserId,
             getQuestionsByTestId,
             editQuestion,
-            deleteQuestion
+            deleteQuestion,
+            answerQuestion
         }}>
             {children}
         </QuestionContext.Provider>
