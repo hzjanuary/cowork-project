@@ -143,6 +143,112 @@ const testController = {
                 error: error.message
             });
         }
+    },
+    startTest: async (req, res) => {
+        try {
+            const { testId } = req.params;
+            const studentId = req.user.id; // from auth middleware
+
+            // Check if test exists and has questions
+            const test = await testModel.findById(testId).populate('questions');
+            if (!test) return res.status(404).json({ error: "Test not found" });
+
+            // Create new attempt
+            const testAttempt = new testAttemptModel({
+                testId,
+                studentId,
+                answers: test.questions.map(q => ({ questionId: q._id }))
+            });
+
+            await testAttempt.save();
+
+            // Return test with questions (without answers)
+            return res.status(200).json({
+                success: true,
+                testAttemptId: testAttempt._id,
+                test: {
+                    _id: test._id,
+                    title: test.title,
+                    timeLimit: test.timeLimit,
+                    questions: test.questions.map(q => ({
+                        _id: q._id,
+                        questionText: q.questionText,
+                        type: q.type,
+                        options: q.options,
+                        difficulty: q.difficulty
+                        // Don't send the answer!
+                    }))
+                }
+            });
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    },
+    submitTest: async (req, res) => {
+        try {
+            const { testAttemptId, answers } = req.body; // answers = [{questionId, studentAnswer}, ...]
+
+            const testAttempt = await testAttemptModel.findById(testAttemptId).populate({
+                path: 'testId',
+                populate: { path: 'questions' }
+            });
+
+            if (!testAttempt) return res.status(404).json({ error: "Test attempt not found" });
+
+            // Update answers
+            answers.forEach(answer => {
+                const attemptAnswer = testAttempt.answers.find(a => a.questionId.toString() === answer.questionId);
+                if (attemptAnswer) {
+                    attemptAnswer.studentAnswer = answer.studentAnswer;
+                }
+            });
+
+            testAttempt.submittedAt = new Date();
+            testAttempt.status = "submitted";
+
+            // Auto-grade objective questions
+            for (let ans of testAttempt.answers) {
+                const question = await questionModel.findById(ans.questionId);
+
+                if (question.type === "multiple_choice" || question.type === "true_false") {
+                    ans.isCorrect = ans.studentAnswer === question.answer;
+                    ans.points = ans.isCorrect ? 1 : 0;
+                }
+                // short_answer questions need manual grading
+            }
+
+            testAttempt.totalScore = testAttempt.answers.reduce((sum, a) => sum + (a.points || 0), 0);
+            testAttempt.totalPoints = testAttempt.answers.length;
+            testAttempt.percentage = (testAttempt.totalScore / testAttempt.totalPoints) * 100;
+            testAttempt.status = "graded";
+
+            await testAttempt.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "Test submitted successfully",
+                score: testAttempt.totalScore,
+                percentage: testAttempt.percentage.toFixed(2)
+            });
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
+    },
+    getTestResults: async (req, res) => {
+        try {
+            const { testAttemptId } = req.params;
+
+            const testAttempt = await testAttemptModel.findById(testAttemptId).populate({
+                path: 'answers.questionId'
+            });
+
+            return res.status(200).json({
+                success: true,
+                data: testAttempt
+            });
+        } catch (error) {
+            return res.status(500).json({ error: error.message });
+        }
     }
 }
 

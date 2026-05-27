@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect } from 'react'
-import instance from '../config/axios.config.js';
+import instance from '../config/axiosConfig.js';
 
 export const AuthContext = createContext();
 
@@ -19,34 +19,33 @@ export const AuthProvider = ({ children }) => {
         setIsLoading(false);
     }, [])
 
-    const login = async ({ email, password }) => {
+    const login = async ({ username, password }) => {
         try {
-            const res = await instance.post('/api/accounts/login', { email, password });
-            const { token, ...accountData } = res.data;
+            const res = await instance.post('/api/accounts/login', { username, password });
+            const { token, account } = res.data;
 
-            localStorage.setItem('account', JSON.stringify(accountData));
+            localStorage.setItem('account', JSON.stringify(account));
             localStorage.setItem('token', token);
             instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            setAccount(accountData);
+            setAccount(account);
             setIsAuthenticated(true);
-            return accountData;
+            return account;
         } catch (error) {
+            console.error('Login API error:', error);
+            console.error('Error response:', error.response?.data);
             throw error
         }
     }
 
     const register = async ({ username, email, password, confirmPassword }) => {
         try {
+            console.log('Sending registration data:', { username, email, password: '***', confirmPassword: '***' });
             const res = await instance.post('/api/accounts/register', { username, email, password, confirmPassword });
-            const { token, ...accountData } = res.data;
-
-            localStorage.setItem('account', JSON.stringify(accountData));
-            localStorage.setItem('token', token);
-            instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            setAccount(accountData);
-            setIsAuthenticated(true);
-            return accountData;
+            console.log('Registration response:', res.data);
+            return res.data;
         } catch (error) {
+            console.error('Register API error:', error);
+            console.error('Error response:', error.response);
             throw error
         }
     }
@@ -65,8 +64,16 @@ export const AuthProvider = ({ children }) => {
     }
 
     const verifyOtp = async (email, pin) => {
-        const res = await instance.post('/api/accounts/verify-otp', { email, pin });
-        return res.data;
+        try {
+            console.log('Verifying OTP:', { email, pin: '***' });
+            const res = await instance.post('/api/accounts/verify-otp', { email, pin });
+            console.log('OTP verification response:', res.data);
+            return res.data;
+        } catch (error) {
+            console.error('OTP verification error:', error);
+            console.error('Error response:', error.response);
+            throw error;
+        }
     }
 
     const resetPassword = async (email, newPassword, confirmPassword) => {

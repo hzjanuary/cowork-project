@@ -1,5 +1,5 @@
 import questionControllers from "../Controllers/questions.controllers.js";
-import { authToken } from '../Middlewares/auth.middlewares.js';
+import { authToken, checkTeacher } from '../Middlewares/auth.middlewares.js';
 import { Router } from "express";
 
 const questionsRouter = Router();
@@ -10,5 +10,6 @@ questionsRouter.get('/test/:testId', authToken, questionControllers.getQuestions
 questionsRouter.get('/user/:userId', authToken, questionControllers.getQuestionsByUserId);
 questionsRouter.put('/:id', authToken, questionControllers.editQuestion);
 questionsRouter.delete('/:id', authToken, questionControllers.deleteQuestion);
+questionsRouter.post('/answer/:id', authToken, checkTeacher, questionControllers.answerQuestion);
 
 export default questionsRouter;

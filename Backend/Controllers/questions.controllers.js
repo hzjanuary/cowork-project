@@ -6,10 +6,10 @@ const questionControllers = {
             const { userId, sourceFile, testId, questionText, type, options, answer, difficulty } = req.body;
 
             // Validate required fields
-            if (!questionText || !type || !answer) {
+            if (!questionText || !type) {
                 return res.status(400).json({
                     success: false,
-                    message: "questionText, type, and answer are required"
+                    message: "questionText and type are required"
                 });
             }
 
@@ -43,6 +43,7 @@ const questionControllers = {
                 options: options || [],
                 answer,
                 difficulty: difficulty || "easy",
+                status: "draft",
                 verified: false
             });
 
@@ -122,6 +123,36 @@ const questionControllers = {
             return res.status(500).json({
                 success: false,
                 message: "Error fetching questions",
+                error: error.message
+            });
+        }
+    },
+    answerQuestion: async (req, res) => {
+        const { id } = req.params;
+        const { answer } = req.body;
+
+        try {
+            const question = await questionModel.findById(id);
+            if (!question) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Question not found"
+                });
+            }
+
+            const isCorrect = question.answer === answer;
+
+            return res.status(200).json({
+                success: true,
+                message: "Question answered successfully",
+                data: {
+                    isCorrect
+                }
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: "Error answering question",
                 error: error.message
             });
         }

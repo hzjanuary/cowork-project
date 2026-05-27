@@ -1,9 +1,7 @@
-import pin from 'node-pin'
-
 export function PIN4Generator () {
-    return pin.generator(4)
+    return Math.floor(Math.random() * 9000) + 1000;
 }
 
 export function PIN6Generator () {
-    return pin.generator(6)
+    return Math.floor(Math.random() * 900000) + 100000;
 }
