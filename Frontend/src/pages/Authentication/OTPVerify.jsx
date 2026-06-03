@@ -8,10 +8,12 @@ import { Spin } from 'antd';
 const OTPVerify = () => {
     const [pin, setPin] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const { verifyOtp } = useAuth();
+    const { verifyOtp, login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const email = location.state?.email;
+    const username = location.state?.username;
+    const password = location.state?.password;
 
     // Redirect to register if no email provided
     if (!email) {
@@ -52,13 +54,31 @@ const OTPVerify = () => {
             const response = await verifyOtp(email, pin);
             console.log('OTP verification response:', response);
 
-            toast.success('Email verified successfully! Redirecting to login...');
+            toast.success('Email verified successfully! Logging you in...');
             
             setPin('');
 
-            setTimeout(() => {
-                navigate('/login');
-            }, 1500);
+            // Auto-login with the provided credentials
+            if (username && password) {
+                try {
+                    await login({ username, password });
+                    toast.success('Logged in successfully! Redirecting to profile creation...');
+                    setTimeout(() => {
+                        navigate('/create-profile');
+                    }, 1500);
+                } catch (loginError) {
+                    console.error('Auto-login error:', loginError);
+                    toast.warning('OTP verified! Please login manually to continue');
+                    setTimeout(() => {
+                        navigate('/login');
+                    }, 1500);
+                }
+            } else {
+                toast.warning('OTP verified! Please login to create your profile');
+                setTimeout(() => {
+                    navigate('/login');
+                }, 1500);
+            }
         } catch (error) {
             console.error('OTP verification error:', error);
             console.error('Error response:', error.response?.data);

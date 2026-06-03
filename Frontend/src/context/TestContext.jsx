@@ -34,7 +34,7 @@ export const TestProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.get('/api/tests/all');
+            const res = await instance.get('/api/tests/');
             setTests(res.data.data);
             return res.data.data;
         } catch (err) {
@@ -65,7 +65,7 @@ export const TestProvider = ({ children }) => {
         setError(null);
 
         try {
-            const res = await instance.post(`/api/tests/start/${testId}`);
+            const res = await instance.post(`/api/tests/tests/${testId}/start`);
             return res.data;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
@@ -74,12 +74,12 @@ export const TestProvider = ({ children }) => {
         }
     }
 
-    const submitTest = async (testId, answers) => {
+    const submitTest = async (testAttemptId, answers) => {
         setIsLoading(true);
         setError(null);
 
         try {
-            const res = await instance.post(`/api/tests/submit/${testId}`, { answers });
+            const res = await instance.post('/api/tests/test-attempts/submit', { testAttemptId, answers });
             return res.data;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
@@ -88,12 +88,12 @@ export const TestProvider = ({ children }) => {
         }
     }
 
-    const getTestResults = async (testId) => {
+    const getTestResults = async (testAttemptId) => {
         setIsLoading(true);
         setError(null);
 
         try {
-            const res = await instance.get(`/api/tests/results/${testId}`);
+            const res = await instance.get(`/api/tests/test-attempts/${testAttemptId}/results`);
             return res.data;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
@@ -149,7 +149,9 @@ export const TestProvider = ({ children }) => {
             getTestById,
             updateTest,
             deleteTest,
-            startTest
+            startTest,
+            submitTest,
+            getTestResults
         }}>
             {children}
         </TestContext.Provider>

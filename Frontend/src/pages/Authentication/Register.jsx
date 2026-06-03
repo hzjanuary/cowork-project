@@ -99,9 +99,9 @@ const Register = () => {
             setPassword('');
             setConfirmPassword('');
 
-            // Redirect to OTP verification page
+            // Redirect to OTP verification page with username and password
             setTimeout(() => {
-                navigate('/verify-otp', { state: { email } });
+                navigate('/verify-otp', { state: { email, username, password } });
             }, 1500);
         } catch (error) {
             console.error('Registration error:', error);

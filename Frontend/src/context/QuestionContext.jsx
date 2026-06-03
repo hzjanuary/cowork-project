@@ -38,7 +38,7 @@ export const QuestionProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.get('/api/questions/all');
+            const res = await instance.get('/api/questions/');
             setQuestions(res.data.data);
             return res.data.data;
         } catch (err) {

@@ -76,6 +76,11 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    const forgotPassword = async (email) => {
+        const res = await instance.post('/api/accounts/forgot-password', { email });
+        return res.data;
+    }
+
     const resetPassword = async (email, newPassword, confirmPassword) => {
         const res = await instance.post('/api/accounts/reset-password', { email, newPassword, confirmPassword });
         return res.data;
@@ -91,6 +96,7 @@ export const AuthProvider = ({ children }) => {
             logout,
             sendOtp,
             verifyOtp,
+            forgotPassword,
             resetPassword
         }}>
             {children}

@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { Box, Typography, Button } from '@mui/material';
+import './Header.css';
 
 const Header = () => {
     const navigate = useNavigate();
@@ -21,26 +22,42 @@ const Header = () => {
         else if (path === '/questions') setActiveTab('3');
     }, [location.pathname]);
 
+    const handleTabChange = (key) => {
+        setActiveTab(key);
+        switch (key) {
+            case '1':
+                navigate('/');
+                break;
+            case '2':
+                navigate('/tests');
+                break;
+            case '3':
+                navigate('/questions');
+                break;
+            case '4':
+                navigate('/faq');
+                break;
+            default:
+                navigate('/');
+        }
+    };
+
     const tabItems = [
         {
             key: '1',
-            label: 'Home',
-            onClick: () => navigate('/')
+            label: 'Home'
         },
         {
             key: '2',
-            label: 'Tests',
-            onClick: () => navigate('/tests')
+            label: 'Tests'
         },
         {
             key: '3',
-            label: 'Questions',
-            onClick: () => navigate('/questions')
+            label: 'Questions'
         },
         {
             key: '4',
-            label: 'FAQ',
-            onClick: () => navigate('/faq')
+            label: 'FAQ'
         }
     ];
 
@@ -49,6 +66,7 @@ const Header = () => {
             key: 'profile',
             label: 'My Profile',
             icon: <UserOutlined />,
+            style: { color: theme === 'dark' ? '#fff' : '#1a1a1a', fontWeight: 'bold', fontSize: '16px' },
             onClick: () => navigate('/profile')
         },
         {
@@ -58,7 +76,7 @@ const Header = () => {
             key: 'logout',
             label: 'Logout',
             icon: <LogoutOutlined />,
-            danger: true,
+            style: { color: '#ff0000', fontWeight: 'bold', fontSize: '16px' },
             onClick: () => {
                 logout();
                 navigate('/login');
@@ -74,6 +92,7 @@ const Header = () => {
                 alignItems: 'center',
                 px: 4,
                 py: 2,
+                width: '100%',
                 backgroundColor: theme === 'dark' ? '#111827' : '#F6F7F9',
                 borderBottom: `1px solid ${theme === 'dark' ? '#333' : '#e0e0e0'}`,
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
@@ -106,19 +125,12 @@ const Header = () => {
 
             {/* Navigation Tabs - Only show when authenticated */}
             {isAuthenticated && (
-                <Box sx={{ flex: 1, mx: 4 }}>
+                <Box sx={{ mx: 10, width: '100%', display: 'flex', justifyContent: 'center' }}>
                     <Tabs
                         activeKey={activeTab}
                         items={tabItems}
-                        onChange={setActiveTab}
-                        sx={{
-                            '& .ant-tabs-tab': {
-                                color: theme === 'dark' ? '#bbb' : '#666'
-                            },
-                            '& .ant-tabs-tab-active': {
-                                color: theme === 'dark' ? '#fff' : '#1a1a1a'
-                            }
-                        }}
+                        onChange={handleTabChange}
+                        className= {theme === 'dark' ? 'tabs-dark' : 'tabs-light'}
                     />
                 </Box>
             )}
@@ -126,20 +138,21 @@ const Header = () => {
             {/* Profile Section */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 {isAuthenticated && account ? (
-                    <Dropdown menu={{ items: profileMenuItems }} placement="bottomRight">
-                        <Space style={{ cursor: 'pointer' }}>
+                    <Dropdown menu={{ items: profileMenuItems }} placement="bottomRight" trigger={['click']} className={theme === 'dark' ? 'dropdown-dark' : 'dropdown-light'}>
+                        <Space style={{ cursor: 'pointer', width: '100%' }}>
                             <Avatar
                                 size={40}
                                 icon={<UserOutlined />}
                                 style={{
                                     backgroundColor: '#667eea',
-                                    cursor: 'pointer'
+                                    cursor: 'pointer',
+                                    border: theme === 'dark' ? '2px solid #333' : '2px solid #e0e0e0'
                                 }}
                             />
                             <Typography
                                 sx={{
                                     color: theme === 'dark' ? '#fff' : '#1a1a1a',
-                                    fontSize: '14px',
+                                    fontWeight: 'bold',
                                     display: { xs: 'none', sm: 'block' }
                                 }}
                             >
