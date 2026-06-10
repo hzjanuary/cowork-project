@@ -1,23 +1,21 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState, useEffect } from 'react'
 import instance from '../config/axiosConfig.js';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [account, setAccount] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const storedAccount = JSON.parse(localStorage.getItem('account'));
+    const storedToken = localStorage.getItem('token');
+    const [account, setAccount] = useState(storedAccount || null);
+    const isLoading = false;
+    const [isAuthenticated, setIsAuthenticated] = useState(Boolean(storedAccount && storedToken));
 
     useEffect(() => {
-        const storeUser = JSON.parse(localStorage.getItem('account'));
-        const token = localStorage.getItem('token');
-        if (storeUser && token) {
-            instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            setAccount(storeUser);
-            setIsAuthenticated(true);
+        if (storedToken) {
+            instance.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         }
-        setIsLoading(false);
-    }, [])
+    }, [storedToken])
 
     const login = async ({ username, password }) => {
         try {
@@ -59,7 +57,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     const sendOtp = async (email) => {
-        const res = await instance.post('/api/accounts/send-otp', { email });
+        const res = await instance.post('/api/accounts/sent-otp', { email });
         return res.data;
     }
 
@@ -76,8 +74,13 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
-    const resetPassword = async (email, newPassword, confirmPassword) => {
-        const res = await instance.post('/api/accounts/reset-password', { email, newPassword, confirmPassword });
+    const forgotPassword = async (email) => {
+        const res = await instance.post('/api/accounts/forgot-password', { email });
+        return res.data;
+    }
+
+    const resetPassword = async (email, password, confirmPassword) => {
+        const res = await instance.post('/api/accounts/reset-password', { email, password, confirmPassword });
         return res.data;
     }
 
@@ -91,6 +94,7 @@ export const AuthProvider = ({ children }) => {
             logout,
             sendOtp,
             verifyOtp,
+            forgotPassword,
             resetPassword
         }}>
             {children}

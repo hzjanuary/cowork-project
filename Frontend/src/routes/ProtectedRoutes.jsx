@@ -2,11 +2,13 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 
 const ProtectedRoutes = ({ children }) => {
-    const { user } = useAuth()
+    const { isAuthenticated, isLoading } = useAuth()
+    const location = useLocation()
 
-    if (!user) {
-        alert('You must be logged in to access this page.');
-        return <Navigate to="/login" state={{ from: useLocation() }} replace />;
+    if (isLoading) return null;
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     return children;

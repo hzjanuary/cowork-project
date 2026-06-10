@@ -1,5 +1,6 @@
-import { createContext, useState, useEffect } from 'react'
-import instance from '../config/axios.config.js';
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState } from 'react'
+import instance from '../config/axiosConfig.js';
 
 export const UserContext = createContext()
 
@@ -12,7 +13,7 @@ export const UserProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.post('/api/users/create', {
+            const res = await instance.post('/api/users', {
                 fullName,
                 phoneNumber,
                 dateOfBirth
@@ -31,7 +32,7 @@ export const UserProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.put(`/api/users/update/${userId}`, {
+            const res = await instance.put(`/api/users/${userId}`, {
                 fullName,
                 phoneNumber,
                 dateOfBirth
@@ -64,7 +65,7 @@ export const UserProvider = ({ children }) => {
     const changePassword = async ({ currentPassword, newPassword, confirmNewPassword }) => {
         setError(null);
         try {
-            const res = await instance.post('/api/users/change-password', {
+            const res = await instance.put('/api/users/change-password', {
                 currentPassword,
                 newPassword,
                 confirmNewPassword
