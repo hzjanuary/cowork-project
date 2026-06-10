@@ -1,29 +1,3 @@
-// import mongoose from "mongoose";
-
-// const fileUploadSchema = new mongoose.Schema({
-//   userId: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
-//   fileUrl: { type: String, required: true },
-//   fileType: { type: String, enum: ["image", "pdf"], required: true },
-
-//   status: {
-//     type: String,
-//     enum: ["uploaded", "processing", "ocr_done", "ai_done", "failed"],
-//     default: "uploaded"
-//   },
-
-//   ocrText: String,
-//   aiRawResponse: String,
-
-//   extractedQuestions: [
-//     { type: mongoose.Schema.Types.ObjectId, ref: "Questions" }
-//   ],
-
-//   createdAt: { type: Date, default: Date.now }
-// });
-
-// const fileUploadModel = mongoose.model("FileUploads", fileUploadSchema);
-// export default fileUploadModel;
-
 import mongoose from "mongoose";
 
 const fileUploadSchema = new mongoose.Schema({

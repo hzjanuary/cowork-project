@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     age: { type: Number, required: true },
     avatar: {
         type: String,
-        default: null
+        default: 'http://localhost:5174/images/default-img.jpg'
     }
 }, { timestamps: true })
 
