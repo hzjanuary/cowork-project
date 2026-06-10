@@ -1,19 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { SaveOutlined } from '@ant-design/icons';
-import { useAuth } from '../../hooks/useAuth.js';
 import {useTest} from '../../hooks/useTest.js';
+import { useUser } from '../../hooks/useUser.js';
 
 const CreateTest = () => {
     const navigate = useNavigate();
-    const { account } = useAuth();
     const { createTest, isLoading } = useTest();
+    const { user, getCurrentUser } = useUser();
     const [form, setForm] = useState({
         title: '',
         timeLimit: 30,
         visibility: 'private'
     });
+
+    useEffect(() => {
+        getCurrentUser().catch(() => {});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
@@ -23,11 +28,15 @@ const CreateTest = () => {
             toast.error('Test title is required.');
             return;
         }
+        if (!user?._id) {
+            toast.error('Create your profile before creating a test.');
+            return;
+        }
 
         try {
             await createTest({
                 title: form.title,
-                userId: account?._id,
+                userId: user?._id,
                 timeLimit: Number(form.timeLimit) || 0,
                 visibility: form.visibility
             });

@@ -4,10 +4,23 @@ import instance from '../config/axiosConfig.js';
 
 export const AuthContext = createContext();
 
+const getAccountIdFromToken = (token) => {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.accountId || null;
+    } catch {
+        return null;
+    }
+};
+
 export const AuthProvider = ({ children }) => {
     const storedAccount = JSON.parse(localStorage.getItem('account'));
     const storedToken = localStorage.getItem('token');
-    const [account, setAccount] = useState(storedAccount || null);
+    const accountIdFromToken = storedToken ? getAccountIdFromToken(storedToken) : null;
+    const initialAccount = storedAccount && !storedAccount._id && accountIdFromToken
+        ? { ...storedAccount, _id: accountIdFromToken }
+        : storedAccount;
+    const [account, setAccount] = useState(initialAccount || null);
     const isLoading = false;
     const [isAuthenticated, setIsAuthenticated] = useState(Boolean(storedAccount && storedToken));
 
@@ -15,6 +28,10 @@ export const AuthProvider = ({ children }) => {
         if (storedToken) {
             instance.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         }
+        if (initialAccount && storedAccount && !storedAccount._id && initialAccount._id) {
+            localStorage.setItem('account', JSON.stringify(initialAccount));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [storedToken])
 
     const login = async ({ username, password }) => {
@@ -57,6 +74,19 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
     }
 
+    const getAccountProfile = async () => {
+        const res = await instance.get('/api/accounts/profile');
+        const nextAccount = { ...account, ...res.data };
+        localStorage.setItem('account', JSON.stringify(nextAccount));
+        setAccount(nextAccount);
+        return nextAccount;
+    }
+
+    const updateRole = async (accountId, role) => {
+        const res = await instance.post('/api/accounts/update-role', { accountId, role });
+        return res.data;
+    }
+
     const sendOtp = async (email) => {
         const res = await instance.post('/api/accounts/sent-otp', { email });
         return res.data;
@@ -80,9 +110,8 @@ export const AuthProvider = ({ children }) => {
         return res.data;
     }
 
-    const resetPassword = async (email, password, confirmPassword) => {
-        const res = await instance.post('/api/accounts/reset-password', { email, password, confirmPassword });
-        return res.data;
+    const resetPassword = async () => {
+        throw new Error('Password reset submission is not available because the backend reset-password route is not declared.');
     }
 
     return (
@@ -93,6 +122,8 @@ export const AuthProvider = ({ children }) => {
             login, 
             register, 
             logout,
+            getAccountProfile,
+            updateRole,
             sendOtp,
             verifyOtp,
             forgotPassword,

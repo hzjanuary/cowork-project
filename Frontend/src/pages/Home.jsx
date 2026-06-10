@@ -16,17 +16,17 @@ import instance from '../config/axiosConfig.js';
 
 const Home = () => {
     const { account, isAuthenticated } = useAuth();
-    const { questions, getAllQuestions } = useQuestion();
+    const { questions, getQuestionBankForAccount } = useQuestion();
     const { tests, getAllTests } = useTest();
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         if (!isAuthenticated) return;
-        getAllQuestions().catch(() => {});
+        getQuestionBankForAccount(account).catch(() => {});
         getAllTests().catch(() => {});
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAuthenticated]);
+    }, [isAuthenticated, account?._id, account?.role]);
 
     const stats = useMemo(() => {
         const verified = questions.filter((item) => item.verified).length;

@@ -36,8 +36,8 @@ export const UserProvider = ({ children }) => {
         }
     }
 
-    const updateAvatar = async (userId, avatarFile) => {
-        console.log('🖼️  [updateAvatar] Starting avatar upload for user:', userId);
+    const updateAvatar = async (avatarFile) => {
+        console.log('🖼️  [updateAvatar] Starting avatar upload');
         console.log('🖼️  [updateAvatar] File details:', {
             name: avatarFile.name,
             size: avatarFile.size,
@@ -103,18 +103,19 @@ export const UserProvider = ({ children }) => {
         }
     }
 
-    const getUser = async (userId) => {
-        console.log('🔍 [getUser] Fetching user:', userId);
+    const getUser = async () => {
+        return getCurrentUser();
+    }
+
+    const getAllUsers = async () => {
+        console.log('🔍 [getAllUsers] Fetching all user profiles');
         setIsLoading(true);
         setError(null);
         try {
-            console.log('🔍 [getUser] Sending GET request to /api/users/', userId);
-            const res = await instance.get(`/api/users/${userId}`);
-            console.log('✅ [getUser] Success! User fetched:', res.data);
-            setUser(res.data.user);
-            return res.data.user;
+            const res = await instance.get('/api/users');
+            return res.data.users || [];
         } catch (err) {
-            console.error('❌ [getUser] Error occurred:', {
+            console.error('❌ [getAllUsers] Error occurred:', {
                 message: err.message,
                 status: err.response?.status,
                 data: err.response?.data,
@@ -183,6 +184,7 @@ export const UserProvider = ({ children }) => {
             updateUser,
             updateAvatar,
             getUser,
+            getAllUsers,
             getCurrentUser,
             changePassword
         }}>

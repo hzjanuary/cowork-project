@@ -70,6 +70,7 @@ export const TestProvider = ({ children }) => {
             return res.data;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
+            throw err;
         } finally {
             setIsLoading(false);
         }
@@ -84,6 +85,7 @@ export const TestProvider = ({ children }) => {
             return res.data;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
+            throw err;
         } finally {
             setIsLoading(false);
         }
@@ -94,10 +96,11 @@ export const TestProvider = ({ children }) => {
         setError(null);
 
         try {
-            const res = await instance.get(`/api/tests/test-attempts/${testId}/results`);
+            const res = await instance.get(`/api/tests/test-attempts/${testAttemptId}/results`);
             return res.data;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
+            throw err;
         } finally {
             setIsLoading(false);
         }

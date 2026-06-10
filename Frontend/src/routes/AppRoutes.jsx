@@ -25,6 +25,8 @@ const AppRoutes = () => {
                     <Route path="/register" element={<Register />} />
                     <Route path="/" element={<Home />} />
                     <Route path="/verify-otp" element={<OTPVerify />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
                     <Route path="/faq" element={<FAQ />} />
                     <Route path="/profile" element={<ProtectedRoutes><Profile /></ProtectedRoutes>} />
                     <Route path="/questions" element={<ProtectedRoutes><QuestionList /></ProtectedRoutes>} />

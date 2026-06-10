@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
-import { useAuth } from '../../hooks/useAuth.js';
 import {useQuestion} from '../../hooks/useQuestion.js';
 
 const defaultOptions = [
@@ -14,7 +13,6 @@ const defaultOptions = [
 
 const CreateQuestion = () => {
     const navigate = useNavigate();
-    const { account } = useAuth();
     const { createQuestion, isLoading } = useQuestion();
     const [form, setForm] = useState({
         questionText: '',
@@ -46,7 +44,6 @@ const CreateQuestion = () => {
         }
 
         const payload = {
-            userId: account?._id,
             questionText: form.questionText,
             type: form.type,
             answer: form.answer,

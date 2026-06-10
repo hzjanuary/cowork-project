@@ -3,16 +3,22 @@ import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { DeleteOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import {useQuestion} from '../../hooks/useQuestion.js';
+import { useAuth } from '../../hooks/useAuth.js';
 
 const QuestionList = () => {
-    const { questions, getAllQuestions, deleteQuestion, isLoading } = useQuestion();
+    const { account } = useAuth();
+    const { questions, getQuestionBankForAccount, deleteQuestion, isLoading } = useQuestion();
     const [query, setQuery] = useState('');
     const [difficulty, setDifficulty] = useState('all');
 
+    const loadQuestions = () => {
+        return getQuestionBankForAccount(account);
+    };
+
     useEffect(() => {
-        getAllQuestions().catch((error) => toast.error(error.response?.data?.message || 'Could not load questions.'));
+        loadQuestions().catch((error) => toast.error(error.response?.data?.message || 'Could not load questions.'));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [account?._id, account?.role]);
 
     const filteredQuestions = useMemo(() => {
         return questions.filter((question) => {
@@ -39,7 +45,7 @@ const QuestionList = () => {
                     <h1>Draft, verify, and organize exercises</h1>
                 </div>
                 <div className="action-row">
-                    <button className="btn btn-secondary" onClick={() => getAllQuestions()} type="button">
+                    <button className="btn btn-secondary" onClick={loadQuestions} type="button">
                         <ReloadOutlined /> Refresh
                     </button>
                     <Link className="btn btn-primary" to="/questions/new">
