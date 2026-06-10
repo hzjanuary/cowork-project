@@ -165,6 +165,28 @@ textarea {
   font-weight: 700;
 }
 
+[data-theme='dark'] .profile-menu .ant-dropdown-menu {
+  background: #1f1635;
+  border: 1px solid rgba(203, 184, 255, 0.26);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38);
+}
+
+[data-theme='dark'] .profile-menu .ant-dropdown-menu-item,
+[data-theme='dark'] .profile-menu .ant-dropdown-menu-item .ant-dropdown-menu-title-content,
+[data-theme='dark'] .profile-menu .ant-dropdown-menu-item .anticon {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .profile-menu .ant-dropdown-menu-item:hover {
+  background: rgba(124, 58, 237, 0.34);
+}
+
+[data-theme='dark'] .profile-menu .ant-dropdown-menu-item-danger,
+[data-theme='dark'] .profile-menu .ant-dropdown-menu-item-danger .ant-dropdown-menu-title-content,
+[data-theme='dark'] .profile-menu .ant-dropdown-menu-item-danger .anticon {
+  color: #ff7aa8;
+}
+
 .app-footer {
   border-top: 1px solid var(--line);
   color: var(--muted);
@@ -428,6 +450,12 @@ label {
 .btn-secondary {
   background: var(--surface-soft);
   color: var(--primary-dark);
+}
+
+[data-theme='dark'] .btn-secondary {
+  background: linear-gradient(135deg, rgba(159, 103, 255, 0.34), rgba(124, 58, 237, 0.2));
+  color: #ffffff;
+  border: 1px solid rgba(203, 184, 255, 0.42);
 }
 
 .btn:disabled {
