@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { DeleteOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import useQuestion from '../../hooks/useQuestion.js';
+import {useQuestion} from '../../hooks/useQuestion.js';
 
 const QuestionList = () => {
     const { questions, getAllQuestions, deleteQuestion, isLoading } = useQuestion();

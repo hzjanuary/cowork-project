@@ -89,7 +89,7 @@ export const TestProvider = ({ children }) => {
         }
     }
 
-    const getTestResults = async (testId) => {
+    const getTestResults = async (testAttemptId) => {
         setIsLoading(true);
         setError(null);
 

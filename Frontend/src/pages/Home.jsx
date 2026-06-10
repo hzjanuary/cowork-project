@@ -10,8 +10,8 @@ import {
     SafetyCertificateOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth.js';
-import useQuestion from '../hooks/useQuestion.js';
-import useTest from '../hooks/useTest.js';
+import {useQuestion} from '../hooks/useQuestion.js';
+import {useTest} from '../hooks/useTest.js';
 import instance from '../config/axiosConfig.js';
 
 const Home = () => {

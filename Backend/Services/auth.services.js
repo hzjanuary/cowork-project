@@ -54,7 +54,14 @@ export const sendAccountVerificationOtp = async (email) => {
 }
 
 export const verifyAccountOtp = async (email, inputPin) => {
-    return verifyOtpByType(email, inputPin, 'verify')
+    const result = await verifyOtpByType(email, inputPin, 'verify')
+
+    await accountModel.updateOne(
+        { email }, 
+        { isVerified: true }
+    )
+
+    return result
 }
 
 // Reset Password

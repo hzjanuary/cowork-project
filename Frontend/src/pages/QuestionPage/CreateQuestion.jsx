@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth.js';
-import useQuestion from '../../hooks/useQuestion.js';
+import {useQuestion} from '../../hooks/useQuestion.js';
 
 const defaultOptions = [
     { label: 'A', text: '', isCorrect: false },
