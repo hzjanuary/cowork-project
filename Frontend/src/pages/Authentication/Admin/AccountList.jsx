@@ -11,33 +11,34 @@ const AccountList = () => {
     const { account } = useAuth();
     const navigate = useNavigate();
 
+    async function fetchAccounts() {
+        try {
+            setIsLoading(true);
+            const res = await instance.get('/api/accounts/admin/accounts');
+            setAccounts(Array.isArray(res.data) ? res.data : []);
+        } catch {
+            toast.error('Failed to fetch accounts');
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     useEffect(() => {
         if (account?.role !== 'admin' && account?.role !== 'moderator') {
             navigate('/admin/login');
             return;
         }
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchAccounts();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [account]);
-
-    const fetchAccounts = async () => {
-        try {
-            setIsLoading(true);
-            const res = await instance.get('/api/accounts/admin/accounts');
-            setAccounts(res.data.data || []);
-        } catch (error) {
-            toast.error('Failed to fetch accounts');
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     const handleRoleChange = async (accountId, newRole) => {
         try {
-            // This would need a backend endpoint to update role
-            toast.info('Role update functionality coming soon');
-            // await instance.put(`/api/accounts/admin/${accountId}/role`, { role: newRole });
-            // fetchAccounts();
-        } catch (error) {
+            await instance.post('/api/accounts/update-role', { accountId, role: newRole });
+            toast.success('Role updated successfully');
+            fetchAccounts();
+        } catch {
             toast.error('Failed to update role');
         }
     };

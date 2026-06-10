@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTest } from '../../hooks/useTest';
 import { useQuestion } from '../../hooks/useQuestion';
-import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
 // import './TestPage.css';
 
@@ -15,13 +14,14 @@ const DoTest = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [timeRemaining, setTimeRemaining] = useState(null);
     const [testStarted, setTestStarted] = useState(false);
+    const [testAttemptId, setTestAttemptId] = useState(null);
     const { getTestById, startTest, submitTest } = useTest();
     const { getQuestionsByTestId } = useQuestion();
-    const { account } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchTestData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id]);
 
     useEffect(() => {
@@ -38,9 +38,10 @@ const DoTest = () => {
             }, 1000);
             return () => clearInterval(timer);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [test, testStarted]);
 
-    const fetchTestData = async () => {
+    async function fetchTestData() {
         try {
             setIsLoading(true);
             const testData = await getTestById(id);
@@ -55,23 +56,35 @@ const DoTest = () => {
                 answersObj[q._id] = '';
             });
             setAnswers(answersObj);
-        } catch (error) {
+        } catch {
             toast.error('Failed to fetch test');
             navigate('/tests');
         } finally {
             setIsLoading(false);
         }
-    };
+    }
 
     const handleStartTest = async () => {
         try {
-            await startTest(id);
+            const started = await startTest(id);
+            if (started?.testAttemptId) {
+                setTestAttemptId(started.testAttemptId);
+            }
+            if (started?.test) {
+                setTest(started.test);
+                setQuestions(started.test.questions || []);
+                const answersObj = {};
+                (started.test.questions || []).forEach(q => {
+                    answersObj[q._id] = '';
+                });
+                setAnswers(answersObj);
+            }
             setTestStarted(true);
             if (test.timeLimit) {
                 setTimeRemaining(test.timeLimit * 60);
             }
             toast.success('Test started!');
-        } catch (error) {
+        } catch {
             toast.error('Failed to start test');
         }
     };
@@ -83,8 +96,12 @@ const DoTest = () => {
         }));
     };
 
-    const handleSubmitTest = async () => {
+    async function handleSubmitTest() {
         if (!window.confirm('Are you sure you want to submit the test?')) return;
+        if (!testAttemptId) {
+            toast.error('No active test attempt was found. Start the test again.');
+            return;
+        }
 
         try {
             setIsLoading(true);
@@ -93,7 +110,7 @@ const DoTest = () => {
                 studentAnswer: answers[questionId]
             }));
 
-            const response = await submitTest(id, answersArray);
+            await submitTest(testAttemptId, answersArray);
             toast.success('Test submitted successfully!');
             navigate(`/tests/${id}`);
         } catch (error) {
@@ -101,7 +118,7 @@ const DoTest = () => {
         } finally {
             setIsLoading(false);
         }
-    };
+    }
 
     const formatTime = (seconds) => {
         const hours = Math.floor(seconds / 3600);

@@ -15,7 +15,6 @@ export const QuestionProvider = ({ children }) => {
         setError(null);
         try {
             const res = await instance.post('/api/questions', {
-                userId,
                 sourceFile,
                 testId,
                 questionText,
@@ -25,7 +24,10 @@ export const QuestionProvider = ({ children }) => {
                 difficulty
             });
             setQuestion(res.data.data);
-            setQuestions([...questions, res.data.data]);
+            setQuestions((current) => {
+                const exists = current.some((item) => item._id === res.data.data._id);
+                return exists ? current : [res.data.data, ...current];
+            });
             return res.data;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
@@ -57,6 +59,34 @@ export const QuestionProvider = ({ children }) => {
             const res = await instance.get(`/api/questions/user/${userId}`);
             setQuestions(res.data.data);
             return res.data.data;
+        } catch (err) {
+            setError(err.response?.data?.message || err.message);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const getQuestionBankForAccount = async (account) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const allRes = await instance.get('/api/questions');
+            const visibleQuestions = allRes.data.data || [];
+
+            if (!account?._id || account.role === 'teacher') {
+                setQuestions(visibleQuestions);
+                return visibleQuestions;
+            }
+
+            const ownRes = await instance.get(`/api/questions/user/${account._id}`);
+            const ownQuestions = ownRes.data.data || [];
+            const merged = [...ownQuestions, ...visibleQuestions].filter((question, index, list) => (
+                list.findIndex((item) => item._id === question._id) === index
+            ));
+
+            setQuestions(merged);
+            return merged;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
             throw err;
@@ -99,7 +129,7 @@ export const QuestionProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.put(`/api/questions/${questionId}`, {
+            const res = await instance.put(`/api/questions/edit/${questionId}`, {
                 questionText,
                 type,
                 options,
@@ -123,7 +153,7 @@ export const QuestionProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.delete(`/api/questions/${questionId}`);
+            const res = await instance.delete(`/api/questions/delete/${questionId}`);
             setQuestions(questions.filter(q => q._id !== questionId));
             return res.data;
         } catch (err) {
@@ -175,6 +205,7 @@ export const QuestionProvider = ({ children }) => {
             error,
             createQuestion,
             getAllQuestions,
+            getQuestionBankForAccount,
             getQuestionsByUserId,
             getQuestionsByTestId,
             getQuestionById,

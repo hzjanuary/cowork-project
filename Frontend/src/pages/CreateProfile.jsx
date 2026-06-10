@@ -76,7 +76,7 @@ const CreateProfile = () => {
             if (avatar) {
                 console.log('📋 [handleSubmit] Avatar selected, starting upload...');
                 try {
-                    await updateAvatar(response.user?._id, avatar);
+                    await updateAvatar(avatar);
                     console.log('✅ [handleSubmit] Avatar uploaded successfully');
                 } catch (uploadErr) {
                     console.error('❌ [handleSubmit] Avatar upload failed:', uploadErr);
