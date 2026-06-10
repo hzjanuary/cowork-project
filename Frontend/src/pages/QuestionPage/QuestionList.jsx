@@ -1,112 +1,90 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuestion } from '../../hooks/useQuestion';
-import { useAuth } from '../../hooks/useAuth';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-// import './QuestionPage.css';
+import { DeleteOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import useQuestion from '../../hooks/useQuestion.js';
 
 const QuestionList = () => {
-    const [questions, setQuestions] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const { getAllQuestions, deleteQuestion } = useQuestion();
-    const { account } = useAuth();
-    const navigate = useNavigate();
+    const { questions, getAllQuestions, deleteQuestion, isLoading } = useQuestion();
+    const [query, setQuery] = useState('');
+    const [difficulty, setDifficulty] = useState('all');
 
     useEffect(() => {
-        fetchQuestions();
+        getAllQuestions().catch((error) => toast.error(error.response?.data?.message || 'Could not load questions.'));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const fetchQuestions = async () => {
-        try {
-            setIsLoading(true);
-            const data = await getAllQuestions();
-            setQuestions(data || []);
-        } catch (error) {
-            toast.error('Failed to fetch questions');
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const filteredQuestions = useMemo(() => {
+        return questions.filter((question) => {
+            const matchesQuery = question.questionText?.toLowerCase().includes(query.toLowerCase());
+            const matchesDifficulty = difficulty === 'all' || question.difficulty === difficulty;
+            return matchesQuery && matchesDifficulty;
+        });
+    }, [questions, query, difficulty]);
 
-    const handleDelete = async (questionId) => {
-        if (!window.confirm('Are you sure you want to delete this question?')) return;
-
+    const handleDelete = async (id) => {
         try {
-            await deleteQuestion(questionId);
-            setQuestions(questions.filter(q => q._id !== questionId));
-            toast.success('Question deleted successfully');
+            await deleteQuestion(id);
+            toast.success('Question deleted.');
         } catch (error) {
-            toast.error('Failed to delete question');
+            toast.error(error.response?.data?.message || 'Delete failed.');
         }
     };
 
     return (
-        <div className="question-list-container">
-            <div className="question-list-header">
-                <h2>Questions</h2>
-                <button onClick={() => navigate('/create-question')} className="btn-primary">
-                    Create New Question
-                </button>
-            </div>
-
-            {isLoading ? (
-                <div className="loading">Loading questions...</div>
-            ) : questions.length === 0 ? (
-                <div className="empty-state">
-                    <p>No questions available</p>
-                    <button onClick={() => navigate('/create-question')} className="btn-primary">
-                        Create First Question
+        <div className="page-stack">
+            <section className="page-heading">
+                <div>
+                    <span className="eyebrow">Question bank</span>
+                    <h1>Draft, verify, and organize exercises</h1>
+                </div>
+                <div className="action-row">
+                    <button className="btn btn-secondary" onClick={() => getAllQuestions()} type="button">
+                        <ReloadOutlined /> Refresh
                     </button>
+                    <Link className="btn btn-primary" to="/questions/new">
+                        <PlusOutlined /> New question
+                    </Link>
                 </div>
-            ) : (
-                <div className="questions-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Question</th>
-                                <th>Type</th>
-                                <th>Difficulty</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {questions.map(question => (
-                                <tr key={question._id}>
-                                    <td>{question.questionText}</td>
-                                    <td>{question.type}</td>
-                                    <td>{question.difficulty}</td>
-                                    <td><span className={`status ${question.status}`}>{question.status}</span></td>
-                                    <td>
-                                        <button
-                                            onClick={() => navigate(`/questions/${question._id}`)}
-                                            className="btn-secondary"
-                                        >
-                                            View
-                                        </button>
-                                        {account?.role === 'teacher' && (
-                                            <>
-                                                <button
-                                                    onClick={() => navigate(`/questions/${question._id}?edit=true`)}
-                                                    className="btn-secondary"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(question._id)}
-                                                    className="btn-danger"
-                                                >
-                                                    Delete
-                                                </button>
-                                            </>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            </section>
+
+            <section className="toolbar">
+                <input
+                    placeholder="Search question text"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                />
+                <select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
+                    <option value="all">All difficulties</option>
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            </section>
+
+            <section className="table-panel">
+                <div className="table-header question-table">
+                    <span>Question</span>
+                    <span>Type</span>
+                    <span>Difficulty</span>
+                    <span>Status</span>
+                    <span></span>
                 </div>
-            )}
+                {filteredQuestions.map((question) => (
+                    <div className="table-row question-table" key={question._id}>
+                        <strong>{question.questionText}</strong>
+                        <span>{question.type?.replace('_', ' ')}</span>
+                        <span className={`pill ${question.difficulty || 'easy'}`}>{question.difficulty || 'easy'}</span>
+                        <span>{question.verified ? 'verified' : question.status || 'draft'}</span>
+                        <button className="icon-btn danger" onClick={() => handleDelete(question._id)} title="Delete" type="button">
+                            <DeleteOutlined />
+                        </button>
+                    </div>
+                ))}
+                {!filteredQuestions.length && (
+                    <div className="empty-state">{isLoading ? 'Loading questions...' : 'No questions match this view.'}</div>
+                )}
+            </section>
         </div>
     );
 };

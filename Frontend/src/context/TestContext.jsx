@@ -1,4 +1,5 @@
-import { createContext, useState, useEffect } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState } from "react";
 import instance from '../config/axiosConfig.js';
 
 export const TestContext = createContext();
@@ -13,7 +14,7 @@ export const TestProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.post('/api/tests/create', {
+            const res = await instance.post('/api/tests', {
                 title,
                 userId,
                 timeLimit: timeLimit || 0,
@@ -34,7 +35,7 @@ export const TestProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.get('/api/tests/');
+            const res = await instance.get('/api/tests');
             setTests(res.data.data);
             return res.data.data;
         } catch (err) {
@@ -93,7 +94,7 @@ export const TestProvider = ({ children }) => {
         setError(null);
 
         try {
-            const res = await instance.get(`/api/tests/test-attempts/${testAttemptId}/results`);
+            const res = await instance.get(`/api/tests/test-attempts/${testId}/results`);
             return res.data;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
@@ -106,7 +107,7 @@ export const TestProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.put(`/api/tests/update/${testId}`, {
+            const res = await instance.put(`/api/tests/${testId}`, {
                 title,
                 timeLimit,
                 visibility
@@ -127,7 +128,7 @@ export const TestProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.delete(`/api/tests/delete/${testId}`);
+            const res = await instance.delete(`/api/tests/${testId}`);
             setTests(tests.filter(t => t._id !== testId));
             return res.data;
         } catch (err) {

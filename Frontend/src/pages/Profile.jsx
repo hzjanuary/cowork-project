@@ -1,232 +1,106 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { toast } from 'react-toastify';
+import { SaveOutlined, UserOutlined } from '@ant-design/icons';
+import { Avatar } from 'antd';
 import { useAuth } from '../hooks/useAuth.js';
 import { useUser } from '../hooks/useUser.js';
-import { toast } from 'react-toastify';
-// import './Profile.css';
 
 const Profile = () => {
-    const [user, setUser] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isEditMode, setIsEditMode] = useState(false);
-    const [editData, setEditData] = useState({});
-    const [newAvatar, setNewAvatar] = useState(null);
-    const [avatarPreview, setAvatarPreview] = useState(null);
-    const { account, logout, isLoading: authLoading } = useAuth();
-    const { user: userData, getCurrentUser, updateUser, updateAvatar } = useUser();
-    const navigate = useNavigate();
+    const { account } = useAuth();
+    const { createUser, changePassword, isLoading } = useUser();
+    const [profile, setProfile] = useState({ fullName: '', phoneNumber: '', dateOfBirth: '' });
+    const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
 
-    useEffect(() => {
-        // Wait for auth state to resolve before redirecting
-        if (authLoading) return;
+    const updateProfile = (field, value) => setProfile((current) => ({ ...current, [field]: value }));
+    const updatePassword = (field, value) => setPasswords((current) => ({ ...current, [field]: value }));
 
-        if (!account) {
-            navigate('/login');
-            return;
-        }
-
-        fetchUserData();
-    }, [account, authLoading]);
-
-    const fetchUserData = async () => {
+    const handleCreateProfile = async (event) => {
+        event.preventDefault();
         try {
-            setIsLoading(true);
-            const data = await getCurrentUser();
-            setUser(data);
-            setEditData(data);
+            await createUser(profile);
+            toast.success('Profile saved.');
         } catch (error) {
-            // If the token is invalid or expired, redirect to login
-            if (error.response?.status === 401) {
-                toast.error('Session expired. Please login again.');
-                logout();
-                navigate('/login');
-                return;
-            }
-
-            toast.error('Failed to fetch profile');
-        } finally {
-            setIsLoading(false);
+            toast.error(error.response?.data?.message || 'Profile could not be saved.');
         }
     };
 
-    const handleAvatarChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setNewAvatar(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setAvatarPreview(reader.result);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    const handleEditChange = (field, value) => {
-        setEditData(prev => ({
-            ...prev,
-            [field]: value
-        }));
-    };
-
-    const handleSaveProfile = async () => {
+    const handlePassword = async (event) => {
+        event.preventDefault();
         try {
-            setIsLoading(true);
-            await updateUser(user._id, {
-                fullName: editData.fullName,
-                phoneNumber: editData.phoneNumber,
-                dateOfBirth: editData.dateOfBirth
-            });
-
-            if (newAvatar) {
-                await updateAvatar(user._id, newAvatar);
-            }
-
-            setUser(editData);
-            setIsEditMode(false);
-            setNewAvatar(null);
-            setAvatarPreview(null);
-            toast.success('Profile updated successfully');
+            await changePassword(passwords);
+            toast.success('Password changed.');
+            setPasswords({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
         } catch (error) {
-            toast.error('Failed to update profile');
-        } finally {
-            setIsLoading(false);
+            toast.error(error.response?.data?.message || 'Password could not be changed.');
         }
     };
-
-    const handleLogout = () => {
-        logout();
-        toast.success('Logged out successfully');
-        navigate('/login');
-    };
-
-    if (isLoading) return <div className="loading">Loading profile...</div>;
-    if (!user) return <div>Profile not found</div>;
 
     return (
-        <div className="profile-container">
-            <div className="profile-header">
-                <h2>My Profile</h2>
-                <div className="profile-actions">
-                    <button onClick={() => setIsEditMode(!isEditMode)} className="btn-secondary">
-                        {isEditMode ? 'Cancel' : 'Edit Profile'}
-                    </button>
-                    <button onClick={handleLogout} className="btn-danger">Logout</button>
+        <div className="page-stack">
+            <section className="profile-banner">
+                <Avatar size={72} icon={<UserOutlined />} />
+                <div>
+                    <span className="eyebrow">{account?.role || 'user'} account</span>
+                    <h1>{account?.username || 'Profile'}</h1>
+                    <p>{account?.email}</p>
                 </div>
-            </div>
+            </section>
 
-            <div className="profile-content">
-                <div className="profile-avatar">
-                    <div className="avatar-container">
-                        <img
-                            src={
-                                avatarPreview ||
-                                user?.avatar ||
-                                (typeof window !== 'undefined' ? '/assets/default-img.jpg' : '/default-avatar.png')
-                            }
-                            alt="Profile"
-                        />
+            <section className="workspace-grid two">
+                <form className="form-panel" onSubmit={handleCreateProfile}>
+                    <div className="panel-heading">
+                        <h2>Learning profile</h2>
                     </div>
-                    {isEditMode && (
+                    <label>
+                        Full name
+                        <input value={profile.fullName} onChange={(event) => updateProfile('fullName', event.target.value)} />
+                    </label>
+                    <label>
+                        Phone number
+                        <input value={profile.phoneNumber} onChange={(event) => updateProfile('phoneNumber', event.target.value)} />
+                    </label>
+                    <label>
+                        Date of birth
+                        <input type="date" value={profile.dateOfBirth} onChange={(event) => updateProfile('dateOfBirth', event.target.value)} />
+                    </label>
+                    <button className="btn btn-primary" disabled={isLoading} type="submit">
+                        <SaveOutlined /> Save profile
+                    </button>
+                </form>
+
+                <form className="form-panel" onSubmit={handlePassword}>
+                    <div className="panel-heading">
+                        <h2>Password</h2>
+                    </div>
+                    <label>
+                        Current password
                         <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleAvatarChange}
-                            className="avatar-input"
+                            type="password"
+                            value={passwords.currentPassword}
+                            onChange={(event) => updatePassword('currentPassword', event.target.value)}
                         />
-                    )}
-                </div>
-
-                <div className="profile-info">
-                    {isEditMode ? (
-                        <div className="edit-form">
-                            <div className="form-group">
-                                <label>Full Name</label>
-                                <input
-                                    type="text"
-                                    value={editData.fullName}
-                                    onChange={(e) => handleEditChange('fullName', e.target.value)}
-                                    disabled={isLoading}
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>Phone Number</label>
-                                <input
-                                    type="tel"
-                                    value={editData.phoneNumber}
-                                    onChange={(e) => handleEditChange('phoneNumber', e.target.value)}
-                                    disabled={isLoading}
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>Date of Birth</label>
-                                <input
-                                    type="date"
-                                    value={editData.dateOfBirth}
-                                    onChange={(e) => handleEditChange('dateOfBirth', e.target.value)}
-                                    disabled={isLoading}
-                                />
-                            </div>
-
-                            <button
-                                onClick={handleSaveProfile}
-                                disabled={isLoading}
-                                className="btn-primary"
-                            >
-                                {isLoading ? 'Saving...' : 'Save Changes'}
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="profile-details">
-                            <div className="detail-row">
-                                <span className="label">Full Name:</span>
-                                <span className="value">{user.fullName || 'Not set'}</span>
-                            </div>
-                            <div className="detail-row">
-                                <span className="label">Email:</span>
-                                <span className="value">{account?.email}</span>
-                            </div>
-                            <div className="detail-row">
-                                <span className="label">Phone:</span>
-                                <span className="value">{user.phoneNumber || 'Not set'}</span>
-                            </div>
-                            <div className="detail-row">
-                                <span className="label">Date of Birth:</span>
-                                <span className="value">{user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString() : 'Not set'}</span>
-                            </div>
-                            <div className="detail-row">
-                                <span className="label">Age:</span>
-                                <span className="value">{user.age || 'Not calculated'}</span>
-                            </div>
-                            <div className="detail-row">
-                                <span className="label">Role:</span>
-                                <span className={`badge role ${account?.role}`}>{account?.role}</span>
-                            </div>
-                            <div className="detail-row">
-                                <span className="label">Account Status:</span>
-                                <span className={`badge ${account?.isVerified ? 'verified' : 'unverified'}`}>
-                                    {account?.isVerified ? 'Verified' : 'Unverified'}
-                                </span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            <div className="profile-links">
-                <button onClick={() => navigate('/tests')} className="link-button">
-                    My Tests
-                </button>
-                <button onClick={() => navigate('/questions')} className="link-button">
-                    My Questions
-                </button>
-                <button onClick={() => navigate('/faq')} className="link-button">
-                    FAQ & Help
-                </button>
-            </div>
+                    </label>
+                    <label>
+                        New password
+                        <input
+                            type="password"
+                            value={passwords.newPassword}
+                            onChange={(event) => updatePassword('newPassword', event.target.value)}
+                        />
+                    </label>
+                    <label>
+                        Confirm new password
+                        <input
+                            type="password"
+                            value={passwords.confirmNewPassword}
+                            onChange={(event) => updatePassword('confirmNewPassword', event.target.value)}
+                        />
+                    </label>
+                    <button className="btn btn-secondary" type="submit">Change password</button>
+                </form>
+            </section>
         </div>
     );
-}
+};
 
 export default Profile;

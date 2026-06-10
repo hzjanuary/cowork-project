@@ -1,4 +1,5 @@
-import { createContext, useState, useEffect } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useState } from "react";
 import instance from '../config/axiosConfig.js';
 
 export const QuestionContext = createContext();
@@ -13,7 +14,8 @@ export const QuestionProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.post('/api/questions/', {
+            const res = await instance.post('/api/questions', {
+                userId,
                 sourceFile,
                 testId,
                 questionText,
@@ -37,7 +39,7 @@ export const QuestionProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.get('/api/questions/');
+            const res = await instance.get('/api/questions');
             setQuestions(res.data.data);
             return res.data.data;
         } catch (err) {
@@ -97,7 +99,7 @@ export const QuestionProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.put(`/api/questions/edit/${questionId}`, {
+            const res = await instance.put(`/api/questions/${questionId}`, {
                 questionText,
                 type,
                 options,
@@ -121,7 +123,7 @@ export const QuestionProvider = ({ children }) => {
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.delete(`/api/questions/delete/${questionId}`);
+            const res = await instance.delete(`/api/questions/${questionId}`);
             setQuestions(questions.filter(q => q._id !== questionId));
             return res.data;
         } catch (err) {

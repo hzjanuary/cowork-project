@@ -1,272 +1,164 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuestion } from '../../hooks/useQuestion';
-import { useUser } from '../../hooks/useUser';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-// import './QuestionPage.css';
+import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
+import { useAuth } from '../../hooks/useAuth.js';
+import useQuestion from '../../hooks/useQuestion.js';
+
+const defaultOptions = [
+    { label: 'A', text: '', isCorrect: false },
+    { label: 'B', text: '', isCorrect: false },
+    { label: 'C', text: '', isCorrect: false },
+    { label: 'D', text: '', isCorrect: false }
+];
 
 const CreateQuestion = () => {
-    const [searchParams] = useSearchParams();
-    const testId = searchParams.get('testId');
-
-    const [formData, setFormData] = useState({
+    const navigate = useNavigate();
+    const { account } = useAuth();
+    const { createQuestion, isLoading } = useQuestion();
+    const [form, setForm] = useState({
         questionText: '',
         type: 'multiple_choice',
-        options: [{ label: 'A', text: '' }, { label: 'B', text: '' }, { label: 'C', text: '' }, { label: 'D', text: '' }],
         answer: '',
-        difficulty: 'medium',
-        testId: testId || ''
+        difficulty: 'easy',
+        testId: ''
     });
+    const [options, setOptions] = useState(defaultOptions);
 
-    const [isLoading, setIsLoading] = useState(false);
-    const { createQuestion } = useQuestion();
-    const { user } = useUser();
-    const navigate = useNavigate();
+    const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleOptionChange = (index, field, value) => {
-        const newOptions = [...formData.options];
-        newOptions[index][field] = value;
-        setFormData(prev => ({
-            ...prev,
-            options: newOptions
-        }));
+    const updateOption = (index, field, value) => {
+        setOptions((current) => current.map((option, optionIndex) => (
+            optionIndex === index ? { ...option, [field]: value } : option
+        )));
     };
 
     const addOption = () => {
-        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        const newLabel = letters[formData.options.length] || `${formData.options.length + 1}`;
-        setFormData(prev => ({
-            ...prev,
-            options: [...prev.options, { label: newLabel, text: '' }]
-        }));
+        const nextLabel = String.fromCharCode(65 + options.length);
+        setOptions((current) => [...current, { label: nextLabel, text: '', isCorrect: false }]);
     };
 
-    const removeOption = (index) => {
-        if (formData.options.length <= 2) {
-            toast.error('At least 2 options are required');
-            return;
-        }
-        setFormData(prev => ({
-            ...prev,
-            options: prev.options.filter((_, i) => i !== index)
-        }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!formData.questionText.trim()) {
-            toast.error('Please enter question text');
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (!form.questionText.trim()) {
+            toast.error('Question text is required.');
             return;
         }
 
-        if (formData.type === 'multiple_choice' && !formData.options.some(o => o.text.trim())) {
-            toast.error('Please add at least one option');
-            return;
-        }
-
-        if (!formData.answer.trim()) {
-            toast.error('Please select or enter the correct answer');
-            return;
-        }
+        const payload = {
+            userId: account?._id,
+            questionText: form.questionText,
+            type: form.type,
+            answer: form.answer,
+            difficulty: form.difficulty,
+            options: form.type === 'multiple_choice' ? options.filter((option) => option.text.trim()) : [],
+            testId: form.testId || undefined
+        };
 
         try {
-            setIsLoading(true);
-            
-            // Prepare options with isCorrect flag
-            let options = [];
-            if (formData.type === 'multiple_choice') {
-                options = formData.options
-                    .filter(o => o.text.trim())
-                    .map(o => ({
-                        label: o.label,
-                        text: o.text,
-                        isCorrect: o.text === formData.answer
-                    }));
-            }
-            
-            const questionData = {
-                testId: formData.testId || null,
-                questionText: formData.questionText,
-                type: formData.type,
-                options: options,
-                answer: formData.answer,
-                difficulty: formData.difficulty
-            };
-
-            await createQuestion(questionData);
-            toast.success('Question created successfully');
+            await createQuestion(payload);
+            toast.success('Question created.');
             navigate('/questions');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to create question');
-        } finally {
-            setIsLoading(false);
+            toast.error(error.response?.data?.message || 'Question could not be created.');
         }
     };
 
     return (
-        <div className="create-question-container">
-            <div className="create-question-card">
-                <h2>Create New Question</h2>
+        <div className="page-stack">
+            <section className="page-heading">
+                <div>
+                    <span className="eyebrow">New question</span>
+                    <h1>Create a reusable exercise</h1>
+                </div>
+            </section>
 
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="questionText">Question</label>
-                        <textarea
-                            id="questionText"
-                            name="questionText"
-                            value={formData.questionText}
-                            onChange={handleInputChange}
-                            placeholder="Enter question text"
-                            disabled={isLoading}
-                            rows="4"
+            <form className="form-panel" onSubmit={handleSubmit}>
+                <label>
+                    Question text
+                    <textarea
+                        rows="5"
+                        value={form.questionText}
+                        onChange={(event) => updateField('questionText', event.target.value)}
+                        placeholder="Paste or write the prompt students will answer"
+                    />
+                </label>
+
+                <div className="form-grid">
+                    <label>
+                        Type
+                        <select value={form.type} onChange={(event) => updateField('type', event.target.value)}>
+                            <option value="multiple_choice">Multiple choice</option>
+                            <option value="true_false">True / false</option>
+                            <option value="short_answer">Short answer</option>
+                        </select>
+                    </label>
+                    <label>
+                        Difficulty
+                        <select value={form.difficulty} onChange={(event) => updateField('difficulty', event.target.value)}>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </label>
+                    <label>
+                        Test ID
+                        <input
+                            value={form.testId}
+                            onChange={(event) => updateField('testId', event.target.value)}
+                            placeholder="Optional"
                         />
-                    </div>
+                    </label>
+                </div>
 
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label htmlFor="type">Question Type</label>
-                            <select
-                                id="type"
-                                name="type"
-                                value={formData.type}
-                                onChange={handleInputChange}
-                                disabled={isLoading}
-                            >
-                                <option value="multiple_choice">Multiple Choice</option>
-                                <option value="true_false">True/False</option>
-                                <option value="short_answer">Short Answer</option>
-                            </select>
-                        </div>
-
-                        <div className="form-group">
-                            <label htmlFor="difficulty">Difficulty</label>
-                            <select
-                                id="difficulty"
-                                name="difficulty"
-                                value={formData.difficulty}
-                                onChange={handleInputChange}
-                                disabled={isLoading}
-                            >
-                                <option value="easy">Easy</option>
-                                <option value="medium">Medium</option>
-                                <option value="hard">Hard</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {formData.type === 'multiple_choice' && (
-                        <div className="options-section">
-                            <h4>Options</h4>
-                            {formData.options.map((option, index) => (
-                                <div key={index} className="option-input">
-                                    <span className="option-label">{option.label}.</span>
-                                    <input
-                                        type="text"
-                                        value={option.text}
-                                        onChange={(e) => handleOptionChange(index, 'text', e.target.value)}
-                                        placeholder={`Option ${option.label}`}
-                                        disabled={isLoading}
-                                    />
-                                    <label>
-                                        <input
-                                            type="radio"
-                                            name="correctAnswer"
-                                            value={option.text}
-                                            checked={formData.answer === option.text}
-                                            onChange={() => setFormData(prev => ({ ...prev, answer: option.text }))}
-                                            disabled={isLoading}
-                                        />
-                                        Correct
-                                    </label>
-                                    {formData.options.length > 2 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => removeOption(index)}
-                                            className="btn-danger btn-small"
-                                            disabled={isLoading}
-                                        >
-                                            Remove
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                            <button
-                                type="button"
-                                onClick={addOption}
-                                className="btn-secondary"
-                                disabled={isLoading}
-                            >
-                                + Add Option
+                {form.type === 'multiple_choice' && (
+                    <section className="option-editor">
+                        <div className="panel-heading">
+                            <h2>Answer options</h2>
+                            <button className="btn btn-secondary" onClick={addOption} type="button">
+                                <PlusOutlined /> Option
                             </button>
                         </div>
-                    )}
-
-                    {formData.type === 'true_false' && (
-                        <div className="options-section">
-                            <h4>Correct Answer</h4>
-                            <label>
+                        {options.map((option, index) => (
+                            <div className="option-row" key={option.label}>
                                 <input
-                                    type="radio"
-                                    name="correctAnswer"
-                                    value="True"
-                                    checked={formData.answer === 'True'}
-                                    onChange={() => setFormData(prev => ({ ...prev, answer: 'True' }))}
-                                    disabled={isLoading}
+                                    value={option.label}
+                                    onChange={(event) => updateOption(index, 'label', event.target.value)}
+                                    aria-label="Option label"
                                 />
-                                True
-                            </label>
-                            <label>
                                 <input
-                                    type="radio"
-                                    name="correctAnswer"
-                                    value="False"
-                                    checked={formData.answer === 'False'}
-                                    onChange={() => setFormData(prev => ({ ...prev, answer: 'False' }))}
-                                    disabled={isLoading}
+                                    value={option.text}
+                                    onChange={(event) => updateOption(index, 'text', event.target.value)}
+                                    placeholder={`Option ${option.label}`}
                                 />
-                                False
-                            </label>
-                        </div>
-                    )}
+                                <label className="check-row">
+                                    <input
+                                        type="checkbox"
+                                        checked={option.isCorrect}
+                                        onChange={(event) => updateOption(index, 'isCorrect', event.target.checked)}
+                                    />
+                                    Correct
+                                </label>
+                            </div>
+                        ))}
+                    </section>
+                )}
 
-                    {formData.type === 'short_answer' && (
-                        <div className="form-group">
-                            <label htmlFor="answer">Correct Answer</label>
-                            <input
-                                type="text"
-                                id="answer"
-                                value={formData.answer}
-                                onChange={(e) => setFormData(prev => ({ ...prev, answer: e.target.value }))}
-                                placeholder="Enter correct answer"
-                                disabled={isLoading}
-                            />
-                        </div>
-                    )}
+                <label>
+                    Stored answer
+                    <input
+                        value={form.answer}
+                        onChange={(event) => updateField('answer', event.target.value)}
+                        placeholder="Exact answer used by backend grading"
+                    />
+                </label>
 
-                    <div className="form-actions">
-                        <button type="submit" disabled={isLoading} className="btn-primary">
-                            {isLoading ? 'Creating...' : 'Create Question'}
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => navigate('/questions')}
-                            className="btn-secondary"
-                            disabled={isLoading}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div className="action-row">
+                    <button className="btn btn-primary" type="submit" disabled={isLoading}>
+                        <SaveOutlined /> {isLoading ? 'Saving...' : 'Save question'}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };

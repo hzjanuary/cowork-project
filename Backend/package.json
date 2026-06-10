@@ -13,6 +13,7 @@
   "dependencies": {
     "@google/genai": "^1.48.0",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
@@ -24,8 +25,7 @@
     "multer-storage-cloudinary": "^4.0.0",
     "node-pin": "^0.3.0",
     "nodemailer": "^8.0.3",
-    "nodemon": "^3.1.11",
-    "ollama": "^0.6.3",
+    "nodemon": "^3.1.14",
     "openai": "^6.27.0",
     "tesseract.js": "^7.0.0"
   }
