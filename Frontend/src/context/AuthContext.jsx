@@ -21,13 +21,14 @@ export const AuthProvider = ({ children }) => {
         try {
             const res = await instance.post('/api/accounts/login', { username, password });
             const { token, account } = res.data;
+            const accountWithUsername = { ...account, username };
 
-            localStorage.setItem('account', JSON.stringify(account));
+            localStorage.setItem('account', JSON.stringify(accountWithUsername));
             localStorage.setItem('token', token);
             instance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            setAccount(account);
+            setAccount(accountWithUsername);
             setIsAuthenticated(true);
-            return account;
+            return accountWithUsername;
         } catch (error) {
             console.error('Login API error:', error);
             console.error('Error response:', error.response?.data);

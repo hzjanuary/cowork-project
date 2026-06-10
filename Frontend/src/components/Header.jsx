@@ -9,12 +9,11 @@ import {
     ReadOutlined,
     UserOutlined
 } from '@ant-design/icons';
-import {useAuth} from '../hooks/useAuth.js';
+import { useAuth } from '../hooks/useAuth.js';
 import ThemeToggle from './ThemeToggle.jsx';
 
 const Header = () => {
     const navigate = useNavigate();
-    const { theme } = ThemeToggle();
     const { account, isAuthenticated, logout } = useAuth();
 
     const profileMenuItems = [
@@ -22,7 +21,7 @@ const Header = () => {
             key: 'profile',
             label: 'Profile',
             icon: <UserOutlined />,
-            style: { color: theme === 'dark' ? '#fff' : '#1a1a1a', fontWeight: 'bold', fontSize: '16px' },
+            style: { fontWeight: 'bold', fontSize: '16px' },
             onClick: () => navigate('/profile')
         },
         {
@@ -59,10 +58,10 @@ const Header = () => {
             <div className="header-actions">
                 <ThemeToggle />
                 {isAuthenticated && account ? (
-                    <Dropdown menu={{ items: profileMenuItems }} placement="bottomRight">
+                    <Dropdown menu={{ items: profileMenuItems }} placement="bottomRight" popupClassName="profile-menu">
                         <Space className="profile-trigger">
                             <Avatar icon={<UserOutlined />} />
-                            <span>{account.username || account.email || 'Account'}</span>
+                            <span>{account.username || 'Account'}</span>
                         </Space>
                     </Dropdown>
                 ) : (
