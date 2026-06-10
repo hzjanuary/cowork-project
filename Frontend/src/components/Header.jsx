@@ -21,13 +21,14 @@ const Header = () => {
             key: 'profile',
             label: 'Profile',
             icon: <UserOutlined />,
+            style: { color: theme === 'dark' ? '#fff' : '#1a1a1a', fontWeight: 'bold', fontSize: '16px' },
             onClick: () => navigate('/profile')
         },
         {
             key: 'logout',
             label: 'Logout',
             icon: <LogoutOutlined />,
-            danger: true,
+            style: { color: '#ff0000', fontWeight: 'bold', fontSize: '16px' },
             onClick: () => {
                 logout();
                 navigate('/login');

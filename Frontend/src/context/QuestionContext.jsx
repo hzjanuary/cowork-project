@@ -10,7 +10,7 @@ export const QuestionProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const createQuestion = async({ userId, sourceFile, testId, questionText, type, options, answer, difficulty }) => {
+    const createQuestion = async({ sourceFile, testId, questionText, type, options, answer, difficulty }) => {
         setIsLoading(true);
         setError(null);
         try {
@@ -80,6 +80,21 @@ export const QuestionProvider = ({ children }) => {
         }
     }
 
+    const getQuestionById = async (questionId) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const res = await instance.get(`/api/questions/${questionId}`);
+            setQuestion(res.data.data);
+            return res.data.data;
+        } catch (err) {
+            setError(err.response?.data?.message || err.message);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     const editQuestion = async (questionId, { questionText, type, options, answer, difficulty, testId }) => {
         setIsLoading(true);
         setError(null);
@@ -134,6 +149,24 @@ export const QuestionProvider = ({ children }) => {
         }
     }
 
+    const reviewQuestion = async (questionId, approved) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const res = await instance.put(`/api/questions/review/${questionId}`, { approved });
+            const updatedQuestions = questions.map(q => q._id === questionId ? res.data.data : q);
+            setQuestions(updatedQuestions);
+            setQuestion(res.data.data);
+            return res.data;
+        } catch (error) {
+            setError(error.response?.data?.message || error.message);
+            throw error;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     return (
         <QuestionContext.Provider value={{
             questions,
@@ -144,9 +177,11 @@ export const QuestionProvider = ({ children }) => {
             getAllQuestions,
             getQuestionsByUserId,
             getQuestionsByTestId,
+            getQuestionById,
             editQuestion,
             deleteQuestion,
-            answerQuestion
+            answerQuestion,
+            reviewQuestion
         }}>
             {children}
         </QuestionContext.Provider>

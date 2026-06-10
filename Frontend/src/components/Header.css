@@ -1,0 +1,45 @@
+.tabs-dark .ant-tabs-nav {
+    border-bottom: 2px solid #333;
+}
+
+.tabs-dark .ant-tabs-tab {
+    color: #bbb;
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.tabs-dark .ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: white !important;
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.tabs-light .ant-tabs-nav {
+    border-bottom: 2px solid #e0e0e0;
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.tabs-light .ant-tabs-tab {
+    color: #666;
+    font-weight: 500;
+    font-size: 20px;
+}
+
+.dark-dropdown {
+    background: #1f1f1f !important;
+    border: 1px solid #333;
+    border-radius: 12px;
+}
+
+.dark-dropdown .ant-dropdown-menu {
+    background: #1f1f1f;
+}
+
+.dark-dropdown .ant-dropdown-menu-item {
+    color: white;
+}
+
+.dark-dropdown .ant-dropdown-menu-item:hover {
+    background: #2d2d2d;
+}

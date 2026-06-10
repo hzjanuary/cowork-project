@@ -1,8 +1,11 @@
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from './MainLayout.jsx';
+import ProtectedRoutes from './ProtectedRoutes.jsx';
 import Login from '../pages/Authentication/Login.jsx';
 import Register from '../pages/Authentication/Register.jsx';
 import OTPVerify from '../pages/Authentication/OTPVerify.jsx';
+import ForgotPassword from '../pages/Authentication/ForgotPassword.jsx';
+import ResetPassword from '../pages/Authentication/ResetPassword.jsx';
 import Home from '../pages/Home.jsx';
 import Profile from '../pages/Profile.jsx';
 import FAQ from '../pages/FAQ.jsx';
@@ -18,6 +21,7 @@ const AppRoutes = () => {
         <>
             <MainLayout>
                 <Routes>
+                    {/* Public Routes */}
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/" element={<Home />} />

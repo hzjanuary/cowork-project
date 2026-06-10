@@ -77,9 +77,19 @@ const accountsController = {
         if (password !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match!' })
         
         try {
-            const normailizedEmail = email.toLowerCase()
-            const exist = await accountsModel.findOne({ email: normailizedEmail })
-            if (!exist) return res.status(404).json({ message: 'Account not found!' })
+            const normalizedEmail = email.toLowerCase()
+            const account = await accountsModel.findOne({ email: normalizedEmail })
+            if (!account) return res.status(404).json({ message: 'Account not found!' })
+
+            if (!account.resetAllowed) return res.status(403).json({ message: 'Password reset not allowed. Please verify your email first!' })
+
+            const hashedPassword = await bcrypt.hash(password, 10)
+            await accountsModel.updateOne(
+                { email: normalizedEmail },
+                { password: hashedPassword, resetAllowed: false }
+            )
+
+            return res.status(200).json({ message: 'Password reset successfully!' })
         } catch (error) {
             return res.status(500).json({ message: error.message })
         }
@@ -128,6 +138,47 @@ const accountsController = {
             return res.status(200).json(account)
         } catch (error) {
             res.status(500).json({ message: error.message })
+        }
+    },
+    updateRole: async (req, res) => {
+        const { accountId, role } = req.body
+        const requesterRole = req.account.role
+
+        if (!accountId || !role) return res.status(400).json({ message: 'Account ID and role are required!' })
+
+        if (!['user', 'teacher', 'moderator', 'admin'].includes(role)) {
+            return res.status(400).json({ message: 'Invalid role. Must be one of: user, teacher, moderator, admin' })
+        }
+
+        try {
+            // Check if no admins exist (allowing first admin assignment)
+            const adminCount = await accountsModel.countDocuments({ role: 'admin' })
+            
+            // Only admins can change roles, unless this is the first admin assignment
+            if (adminCount > 0 && requesterRole !== 'admin') {
+                return res.status(403).json({ message: 'Only administrators can change user roles!' })
+            }
+
+            const account = await accountsModel.findById(accountId)
+            if (!account) return res.status(404).json({ message: 'Account not found!' })
+
+            // Update the role
+            await accountsModel.updateOne(
+                { _id: accountId },
+                { role }
+            )
+
+            return res.status(200).json({ 
+                message: 'Role updated successfully!', 
+                account: { 
+                    _id: account._id, 
+                    username: account.username,
+                    email: account.email, 
+                    role 
+                } 
+            })
+        } catch (error) {
+            return res.status(500).json({ message: error.message })
         }
     }
 }

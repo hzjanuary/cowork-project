@@ -11,5 +11,6 @@ accountsRouter.post ('/forgot-password', accountController.forgetPassword);
 accountsRouter.post("/login", loginValidation, accountController.loginAccount);
 accountsRouter.get("/profile", authToken, accountController.getAccountById);
 accountsRouter.get("/admin/accounts", authToken, checkAdmin, accountController.getAllAccounts);
+accountsRouter.post("/update-role", authToken, accountController.updateRole);
 
 export default accountsRouter;
