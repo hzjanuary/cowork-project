@@ -25,6 +25,7 @@
     "node-pin": "^0.3.0",
     "nodemailer": "^8.0.3",
     "nodemon": "^3.1.11",
+    "ollama": "^0.6.3",
     "openai": "^6.27.0",
     "tesseract.js": "^7.0.0"
   }

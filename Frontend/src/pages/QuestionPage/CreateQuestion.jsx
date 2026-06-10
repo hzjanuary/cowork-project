@@ -80,12 +80,24 @@ const CreateQuestion = () => {
 
         try {
             setIsLoading(true);
+            
+            // Prepare options with isCorrect flag
+            let options = [];
+            if (formData.type === 'multiple_choice') {
+                options = formData.options
+                    .filter(o => o.text.trim())
+                    .map(o => ({
+                        label: o.label,
+                        text: o.text,
+                        isCorrect: o.text === formData.answer
+                    }));
+            }
+            
             const questionData = {
-                userId: user?._id,
                 testId: formData.testId || null,
                 questionText: formData.questionText,
                 type: formData.type,
-                options: formData.type === 'multiple_choice' ? formData.options.filter(o => o.text.trim()) : [],
+                options: options,
                 answer: formData.answer,
                 difficulty: formData.difficulty
             };

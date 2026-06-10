@@ -1,9 +1,11 @@
 import questionModel from "../Models/questions.models.js";
+import answerModel from "../Models/answers.models.js";
 
 const questionControllers = {
     createQuestion: async (req, res) => {
         try {
-            const { userId, sourceFile, testId, questionText, type, options, answer, difficulty } = req.body;
+            const { sourceFile, testId, questionText, type, options, answer, difficulty } = req.body;
+            const userId = req.account._id; // Extract from authenticated user
 
             // Validate required fields
             if (!questionText || !type) {
@@ -66,16 +68,79 @@ const questionControllers = {
     },
     getAllQuestions: async (req, res) => {
         try {
-            const questions = await questionModel.find();
+            // Students only see verified questions, teachers see all
+            const query = req.account?.role === 'teacher' ? {} : { status: 'verified' };
+            const questions = await questionModel.find(query);
+            
+            // Add hasAnswered flag for each question
+            const userId = req.account?._id;
+            const questionsWithAnswerStatus = await Promise.all(
+                questions.map(async (q) => {
+                    const answer = await answerModel.findOne({ 
+                        questionId: q._id, 
+                        userId 
+                    });
+                    return {
+                        ...q.toObject(),
+                        hasAnswered: !!answer,
+                        userAnswer: answer ? answer.userAnswer : null,
+                        isUserAnswerCorrect: answer ? answer.isCorrect : null
+                    };
+                })
+            );
+
             return res.status(200).json({
                 success: true,
                 message: "Questions fetched successfully",
-                data: questions
+                data: questionsWithAnswerStatus
             });
         } catch (error) {
             return res.status(500).json({
                 success: false,
                 message: "Error fetching questions",
+                error: error.message
+            });
+        }
+    },
+    getQuestionById: async (req, res) => {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Question ID is required"
+            });
+        }
+
+        try {
+            const question = await questionModel.findById(id);
+            if (!question) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Question not found"
+                });
+            }
+
+            // Check if user has answered this question
+            const userId = req.account?._id;
+            const userAnswer = await answerModel.findOne({ 
+                questionId: id, 
+                userId 
+            });
+
+            let responseData = question.toObject();
+            responseData.hasAnswered = !!userAnswer;
+            responseData.userAnswer = userAnswer ? userAnswer.userAnswer : null;
+            responseData.isUserAnswerCorrect = userAnswer ? userAnswer.isCorrect : null;
+
+            return res.status(200).json({
+                success: true,
+                message: "Question fetched successfully",
+                data: responseData
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: "Error fetching question",
                 error: error.message
             });
         }
@@ -130,6 +195,7 @@ const questionControllers = {
     answerQuestion: async (req, res) => {
         const { id } = req.params;
         const { answer } = req.body;
+        const userId = req.account?._id;
 
         try {
             const question = await questionModel.findById(id);
@@ -140,13 +206,38 @@ const questionControllers = {
                 });
             }
 
-            const isCorrect = question.answer === answer;
+            // Check if answer is correct based on question type
+            let isCorrect = false;
+            if (question.type === 'multiple_choice') {
+                const correctOption = question.options?.find(opt => opt.isCorrect);
+                isCorrect = answer === correctOption?.label;
+            } else if (question.type === 'true_false') {
+                isCorrect = answer === question.answer;
+            } else if (question.type === 'short_answer') {
+                isCorrect = answer.toLowerCase().trim() === (question.answer || '').toLowerCase().trim();
+            }
+
+            // Save or update the user's answer
+            await answerModel.findOneAndUpdate(
+                { questionId: id, userId },
+                { 
+                    questionId: id, 
+                    userId, 
+                    userAnswer: answer, 
+                    isCorrect 
+                },
+                { upsert: true, new: true }
+            );
 
             return res.status(200).json({
                 success: true,
                 message: "Question answered successfully",
                 data: {
-                    isCorrect
+                    isCorrect,
+                    correctAnswer: question.answer,
+                    correctLabel: question.type === 'multiple_choice' 
+                        ? question.options?.find(opt => opt.isCorrect)?.label 
+                        : null
                 }
             });
         } catch (error) {
@@ -228,6 +319,48 @@ const questionControllers = {
             return res.status(500).json({
                 success: false,
                 message: "Error deleting question",
+                error: error.message
+            });
+        }
+    },
+    reviewQuestion: async (req, res) => {
+        const { id } = req.params;
+        const { approved } = req.body;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "Question ID is required"
+            });
+        }
+
+        try {
+            const question = await questionModel.findById(id);
+            if (!question) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Question not found"
+                });
+            }
+
+            const updatedQuestion = await questionModel.findByIdAndUpdate(
+                id,
+                { 
+                    status: approved ? 'verified' : 'draft',
+                    verified: approved
+                },
+                { new: true }
+            );
+
+            return res.status(200).json({
+                success: true,
+                message: `Question ${approved ? 'approved' : 'rejected'} successfully`,
+                data: updatedQuestion
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: "Error reviewing question",
                 error: error.message
             });
         }
