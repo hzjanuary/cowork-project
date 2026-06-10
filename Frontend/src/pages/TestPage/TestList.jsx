@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { DeleteOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
-import useTest from '../../hooks/useTest.js';
+import {useTest} from '../../hooks/useTest.js';
 
 const TestList = () => {
     const { tests, getAllTests, deleteTest, isLoading } = useTest();

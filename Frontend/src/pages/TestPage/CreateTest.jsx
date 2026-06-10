@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { SaveOutlined } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth.js';
-import useTest from '../../hooks/useTest.js';
+import {useTest} from '../../hooks/useTest.js';
 
 const CreateTest = () => {
     const navigate = useNavigate();

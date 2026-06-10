@@ -1,6 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from './MainLayout.jsx';
-import ProtectedRoutes from './ProtectedRoutes.jsx';
 import Login from '../pages/Authentication/Login.jsx';
 import Register from '../pages/Authentication/Register.jsx';
 import OTPVerify from '../pages/Authentication/OTPVerify.jsx';

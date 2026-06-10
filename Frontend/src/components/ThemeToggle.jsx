@@ -1,4 +1,4 @@
-import { useTheme } from "../hooks/useTheme";
+import {useTheme} from "../hooks/useTheme";
 import { Switch } from "antd";
 import { SunFilled, MoonFilled } from "@ant-design/icons";
 

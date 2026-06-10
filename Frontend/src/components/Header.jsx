@@ -9,11 +9,12 @@ import {
     ReadOutlined,
     UserOutlined
 } from '@ant-design/icons';
-import { useAuth } from '../hooks/useAuth.js';
+import {useAuth} from '../hooks/useAuth.js';
 import ThemeToggle from './ThemeToggle.jsx';
 
 const Header = () => {
     const navigate = useNavigate();
+    const { theme } = ThemeToggle();
     const { account, isAuthenticated, logout } = useAuth();
 
     const profileMenuItems = [
