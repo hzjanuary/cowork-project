@@ -297,6 +297,12 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.student-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.15fr);
+  gap: 16px;
+}
+
 .stat-card,
 .panel,
 .form-panel,
@@ -505,6 +511,114 @@ label {
   grid-template-columns: minmax(220px, 1fr) 120px 110px 130px 42px;
 }
 
+.student-test-table {
+  grid-template-columns: minmax(240px, 1fr) 120px 130px 126px;
+}
+
+.student-test-table .btn {
+  min-width: 116px;
+}
+
+.join-form {
+  display: grid;
+  gap: 14px;
+}
+
+.join-panel,
+.attempts-panel {
+  min-height: 240px;
+}
+
+.student-attempt-row {
+  grid-template-columns: 100px minmax(0, 1fr) 64px;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.admin-tabs button {
+  border: 0;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 16px;
+  font-weight: 800;
+}
+
+.admin-tabs button.active,
+.admin-tabs button:hover {
+  background: var(--surface-soft);
+  color: var(--primary-dark);
+}
+
+.admin-user-table {
+  grid-template-columns: minmax(140px, 1fr) minmax(210px, 1.3fr) 130px 100px 110px 138px;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.metric-panel {
+  min-height: 240px;
+  display: grid;
+  align-content: space-between;
+  overflow: hidden;
+}
+
+.metric-panel strong {
+  font-size: 42px;
+}
+
+.metric-bars {
+  height: 110px;
+  display: flex;
+  align-items: end;
+  gap: 10px;
+}
+
+.metric-bars span {
+  flex: 1;
+  border-radius: 8px 8px 0 0;
+  background: var(--primary-gradient);
+  min-height: 22px;
+}
+
+.metric-line {
+  height: 110px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, transparent 8%, rgba(124, 58, 237, 0.16) 8% 90%, transparent 90%),
+    linear-gradient(165deg, transparent 45%, var(--accent) 46% 49%, transparent 50%),
+    var(--surface-soft);
+}
+
+.metric-donut {
+  width: 116px;
+  height: 116px;
+  border-radius: 50%;
+  background: conic-gradient(var(--primary) 0 72%, var(--surface-soft) 72% 100%);
+  position: relative;
+}
+
+.metric-donut::after {
+  content: '';
+  position: absolute;
+  inset: 24px;
+  border-radius: 50%;
+  background: var(--surface);
+}
+
 .empty-state {
   padding: 28px;
   color: var(--muted);
@@ -614,6 +728,7 @@ label {
   .landing,
   .workspace-grid,
   .workspace-grid.two,
+  .student-grid,
   .auth-card {
     grid-template-columns: 1fr;
   }
@@ -628,6 +743,8 @@ label {
 
   .question-table,
   .test-table,
+  .student-test-table,
+  .admin-user-table,
   .table-row {
     grid-template-columns: 1fr;
   }
