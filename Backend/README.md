@@ -109,7 +109,8 @@ All routes are prefixed with `/api`.
 | **/accounts/update-role** | POST | JWT Required | `admin` (or first admin setup) | Updates the role of a specified account. |
 | **/accounts/verify-email** | POST | Public | None | Activates a deactivated account. |
 | **/accounts/deactivate** | POST | JWT Required | Any | Deactivates an active account. |
-| **/accounts/activate** | POST | JWT Required | Any | Deletes an account permanently (naming mismatch). |
+| **/accounts/activate** | POST | JWT Required | Any | Activates an account. |
+| **/accounts/delete** | DELETE | JWT Required | Any | Deletes an account permanently. |
 | **/users** | POST | JWT Required | Any | Creates a user profile containing personal information. |
 | **/users/me** | GET | JWT Required | Any | Fetches the profile of the currently logged-in user. |
 | **/users** | GET | JWT Required | `admin` | Fetches a list of all user profiles. |
@@ -329,7 +330,7 @@ Defined in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/a
   }
   ```
 
-#### 11. Verify Email (Activate Account)
+#### 11. Verify Email
 * **Route:** `POST /api/accounts/verify-email`
 * **Auth:** None (Public)
 * **Response (200 OK):**
@@ -351,8 +352,19 @@ Defined in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/a
   ```
   *(See Known Issues: This endpoint expects an `accountId` path parameter that is missing in its route mapping)*
 
-#### 13. Activate (Deletes Account)
+#### 13. Activate Account
 * **Route:** `POST /api/accounts/activate`
+* **Auth:** JWT Required
+* **Response (200 OK):**
+  ```json
+  {
+    "message": "Account activated successfully!"
+  }
+  ```
+  *(See Known Issues: This endpoint expects an `accountId` path parameter that is missing in its route mapping)*
+
+#### 14. Delete Account
+* **Route:** `DELETE /api/accounts/delete`
 * **Auth:** JWT Required
 * **Response (200 OK):**
   ```json
@@ -360,7 +372,7 @@ Defined in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/a
     "message": "Account deleted successfully!"
   }
   ```
-  *(See Known Issues: Naming mismatch / deletion behavior, and missing route parameter)*
+  *(See Known Issues: This endpoint expects an `accountId` path parameter that is missing in its route mapping)*
 
 ---
 
@@ -941,14 +953,14 @@ The application uses the following MongoDB collections via Mongoose:
 * **`role`**: String, enum `['user', 'teacher', 'admin']`, default `'user'`, required: true *(Note: `moderator` role was deleted)*
 * **`isVerified`**: Boolean, default `false`
 * **`resetAllowed`**: Boolean, default `false`
-* **`active`**: Boolean, default `true` *(Added recently)*
+* **`active`**: Boolean, default `true`
 
 ### 2. Users (`Users`)
 * **`accountId`**: ObjectId ref `accounts`
 * **`fullName`**: String, required
 * **`phoneNumber`**: String, required
 * **`dateOfBirth`**: Date, required
-* **`gender`**: String, enum `['male', 'female', 'other']`, required: true *(Added recently)*
+* **`gender`**: String, enum `['male', 'female', 'other']`, required: true
 * **`age`**: Number, required
 * **`avatar`**: String, default placeholder avatar URL
 
@@ -1007,15 +1019,13 @@ The application uses the following MongoDB collections via Mongoose:
 
 Several mismatches, incomplete implementations, and bugs remain in the backend code:
 
-1. **Missing Route Parameters in Verify Email, Deactivate, and Activate Routes**:
-   The routes `POST /api/accounts/verify-email`, `POST /api/accounts/deactivate`, and `POST /api/accounts/activate` are mapped to controller methods that extract `accountId` from `req.params.accountId`. However, the routes themselves do not specify any `:accountId` path parameters, meaning `req.params.accountId` will be `undefined`, causing database failures when called.
-2. **Routing/Controller Naming and Action Mismatch for Delete Route**:
-   The route `POST /api/accounts/activate` is mapped to `accountController.deleteAccount`, which performs a permanent deletion (`deleteOne`) of the account database record, rather than activating it.
-3. **Missing `testAttemptModel` Import**:
+1. **Missing Route Parameters in Verify Email, Deactivate, Activate, and Delete Routes**:
+   The routes `POST /api/accounts/verify-email`, `POST /api/accounts/deactivate`, `POST /api/accounts/activate`, and `DELETE /api/accounts/delete` are mapped to controller methods that extract `accountId` from `req.params.accountId`. However, the routes themselves do not specify any `:accountId` path parameters, meaning `req.params.accountId` will be `undefined`, causing database failures when called.
+2. **Missing `testAttemptModel` Import**:
    In [tests.controllers.js](file:///d:/Individual%20Project/Backend/Controllers/tests.controllers.js), `testAttemptModel` is used in functions `startTest` and `submitTest` but is never imported at the top of the file, causing runtime reference errors.
-4. **Broken Imports in `processing.services.js`**:
+3. **Broken Imports in `processing.services.js`**:
    The file [processing.services.js](file:///d:/Individual%20Project/Backend/Services/processing.services.js) tries to import `FileUpload` and `Question` models using lowercase folder paths (`../models/FileUpload.js` instead of `../Models/fileUpload.models.js`), which fails due to case sensitivity. Additionally, the service is never invoked from any controller.
-5. **Missing `next()` in `checkTeacher`**:
+4. **Missing `next()` in `checkTeacher`**:
    The middleware function `checkTeacher` in [auth.middlewares.js](file:///d:/Individual%20Project/Backend/Middlewares/auth.middlewares.js) checks if the role is teacher/admin but does not call `next()` on success, meaning requests passing this middleware will hang indefinitely.
-6. **Params mismatch in `getAccountById`**:
+5. **Params mismatch in `getAccountById`**:
    The `/profile` route uses `authToken` and calls `getAccountById`. However, `getAccountById` expects `req.params.accountId` to be set, which is not populated on `/profile` unless it was structured as `/profile/:accountId`.

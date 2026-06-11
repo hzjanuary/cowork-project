@@ -16,6 +16,7 @@ accountsRouter.get("/admin/accounts", authToken, checkAdmin, accountController.g
 accountsRouter.post("/update-role", authToken, accountController.updateRole);
 accountsRouter.post("/verify-email", accountController.activateAccount);
 accountsRouter.post("/deactivate", authToken, accountController.deActivateAccount);
-accountsRouter.post("/activate", authToken, accountController.deleteAccount);
+accountsRouter.post("/activate", authToken, accountController.activateAccount);
+accountsRouter.delete("/delete", authToken, accountController.deleteAccount);
 
 export default accountsRouter;
