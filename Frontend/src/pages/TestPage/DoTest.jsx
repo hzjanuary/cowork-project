@@ -47,18 +47,22 @@ const DoTest = () => {
             const testData = await getTestById(id);
             setTest(testData);
 
-            const questionsData = await getQuestionsByTestId(id);
-            setQuestions(questionsData || []);
+            try {
+                const questionsData = await getQuestionsByTestId(id);
+                setQuestions(questionsData || []);
 
-            // Initialize answers object
-            const answersObj = {};
-            questionsData.forEach(q => {
-                answersObj[q._id] = '';
-            });
-            setAnswers(answersObj);
+                const answersObj = {};
+                (questionsData || []).forEach(q => {
+                    answersObj[q._id] = '';
+                });
+                setAnswers(answersObj);
+            } catch {
+                setQuestions([]);
+                setAnswers({});
+            }
         } catch {
             toast.error('Failed to fetch test');
-            navigate('/tests');
+            navigate('/student');
         } finally {
             setIsLoading(false);
         }
@@ -72,20 +76,25 @@ const DoTest = () => {
             }
             if (started?.test) {
                 setTest(started.test);
-                setQuestions(started.test.questions || []);
+                const startedQuestions = started.test.questions || [];
+                if (!startedQuestions.length) {
+                    toast.error('This test has no available questions.');
+                    return;
+                }
+                setQuestions(startedQuestions);
                 const answersObj = {};
-                (started.test.questions || []).forEach(q => {
+                startedQuestions.forEach(q => {
                     answersObj[q._id] = '';
                 });
                 setAnswers(answersObj);
             }
             setTestStarted(true);
-            if (test.timeLimit) {
-                setTimeRemaining(test.timeLimit * 60);
+            if (started?.test?.timeLimit || test?.timeLimit) {
+                setTimeRemaining((started?.test?.timeLimit || test.timeLimit) * 60);
             }
             toast.success('Test started!');
-        } catch {
-            toast.error('Failed to start test');
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.response?.data?.error || 'Failed to start test');
         }
     };
 
@@ -128,7 +137,8 @@ const DoTest = () => {
     };
 
     if (isLoading) return <div className="loading">Loading test...</div>;
-    if (!test || questions.length === 0) return <div>Test not found or has no questions</div>;
+    if (!test) return <div>Test not found</div>;
+    if (testStarted && questions.length === 0) return <div>This test has no available questions</div>;
 
     if (!testStarted) {
         return (
@@ -136,12 +146,12 @@ const DoTest = () => {
                 <div className="test-start-card">
                     <h2>{test.title}</h2>
                     <div className="test-info">
-                        <p><strong>Total Questions:</strong> {questions.length}</p>
+                        <p><strong>Total Questions:</strong> {questions.length || 'Loaded when you start'}</p>
                         <p><strong>Time Limit:</strong> {test.timeLimit || 'Unlimited'} minutes</p>
                     </div>
                     <p>Click the button below to start the test.</p>
                     <button onClick={handleStartTest} className="btn-primary">Start Test</button>
-                    <button onClick={() => navigate('/tests')} className="btn-secondary">Cancel</button>
+                    <button onClick={() => navigate('/student')} className="btn-secondary">Cancel</button>
                 </div>
             </div>
         );

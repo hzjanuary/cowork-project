@@ -174,20 +174,28 @@ const testController = {
             const { testId } = req.params;
             const studentId = req.account._id;
 
-            // Check if test exists and has questions
             const test = await testModel.findById(testId).populate('questions');
             if (!test) return res.status(404).json({ error: "Test not found" });
 
-            // Create new attempt
+            const questions = test.questions?.length
+                ? test.questions
+                : await questionModel.find({ testId: test._id });
+
+            if (!questions.length) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Test has no questions"
+                });
+            }
+
             const testAttempt = new testAttemptModel({
                 testId,
                 studentId,
-                answers: test.questions.map(q => ({ questionId: q._id }))
+                answers: questions.map(q => ({ questionId: q._id }))
             });
 
             await testAttempt.save();
 
-            // Return test with questions (without answers)
             return res.status(200).json({
                 success: true,
                 testAttemptId: testAttempt._id,
@@ -195,13 +203,15 @@ const testController = {
                     _id: test._id,
                     title: test.title,
                     timeLimit: test.timeLimit,
-                    questions: test.questions.map(q => ({
+                    questions: questions.map(q => ({
                         _id: q._id,
                         questionText: q.questionText,
                         type: q.type,
-                        options: q.options,
+                        options: q.options?.map(option => ({
+                            label: option.label,
+                            text: option.text
+                        })),
                         difficulty: q.difficulty
-                        // Don't send the answer!
                     }))
                 }
             });
@@ -235,11 +245,19 @@ const testController = {
             for (let ans of testAttempt.answers) {
                 const question = await questionModel.findById(ans.questionId);
 
-                if (question.type === "multiple_choice" || question.type === "true_false") {
-                    ans.isCorrect = ans.studentAnswer === question.answer;
+                if (question.type === "multiple_choice") {
+                    const correctOption = question.options?.find(option => option.isCorrect);
+                    ans.isCorrect = ans.studentAnswer === question.answer
+                        || ans.studentAnswer === correctOption?.label
+                        || ans.studentAnswer === correctOption?.text;
+                    ans.points = ans.isCorrect ? 1 : 0;
+                } else if (question.type === "true_false") {
+                    ans.isCorrect = String(ans.studentAnswer).toLowerCase() === String(question.answer).toLowerCase();
+                    ans.points = ans.isCorrect ? 1 : 0;
+                } else if (question.type === "short_answer") {
+                    ans.isCorrect = String(ans.studentAnswer || '').trim().toLowerCase() === String(question.answer || '').trim().toLowerCase();
                     ans.points = ans.isCorrect ? 1 : 0;
                 }
-                // short_answer questions need manual grading
             }
 
             testAttempt.totalScore = testAttempt.answers.reduce((sum, a) => sum + (a.points || 0), 0);
