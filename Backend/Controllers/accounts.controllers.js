@@ -7,7 +7,7 @@ import resetPasswordEmail from '../Utils/ResetPassword/resetPassword.js'
 
 const accountsController = {
     createAccount: async (req, res) => {
-        const { username, email, password, confirmPassword } = req.body
+        const { username, email, password, role, confirmPassword } = req.body
         if (!username || !email || !password || !confirmPassword) return res.status(400).json({ message: 'Missing Information' })
 
         if (password !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match!' })
@@ -23,6 +23,7 @@ const accountsController = {
                 username,
                 email: normalizedEmail,
                 password: hashedPassword,
+                role: role || 'user',
                 isVerified: false
             })
 
@@ -140,6 +141,29 @@ const accountsController = {
             res.status(500).json({ message: error.message })
         }
     },
+    changePassword: async (req, res) => {
+        const accountId = req.account._id
+        const { currentPassword, newPassword, confirmNewPassword } = req.body
+        if (!currentPassword || !newPassword || !confirmNewPassword) return res.status(400).json({ message: 'Missing fields!' })
+
+        if (newPassword !== confirmNewPassword) return res.status(400).json({ message: 'New passwords do not match!' })
+
+        try {
+            const account = await accountsModel.findById(req.account._id)
+            if (!account) return res.status(404).json({ message: 'Account not found!' })
+
+            const isMatch = await bcrypt.compare(currentPassword, account.password)
+            if (!isMatch) return res.status(400).json({ message: 'Current password is incorrect!' })
+
+            const hashedNewPassword = await bcrypt.hash(newPassword, 10)
+            account.password = hashedNewPassword
+            await account.save()
+
+            return res.status(200).json({ message: 'Password changed successfully!' })
+        } catch (error) {
+            res.status(500).json({ message: 'Internal server error', error: error.message })
+        }
+    },
     updateRole: async (req, res) => {
         const { accountId, role } = req.body
         const requesterRole = req.account.role
@@ -177,6 +201,46 @@ const accountsController = {
                     role 
                 } 
             })
+        } catch (error) {
+            return res.status(500).json({ message: error.message })
+        }
+    },
+    activateAccount: async (req, res) => {
+        const { accountId } = req.params
+
+        try {
+            const account = await accountsModel.findById(accountId)
+            if (!account) return res.status(404).json({ message: 'Account not found!' })
+
+            await accountsModel.updateOne({ _id: accountId }, { active: true })
+            return res.status(200).json({ message: 'Account activated successfully!' })
+        } catch (error) {
+            return res.status(500).json({ message: error.message })
+        }
+    },
+    deActivateAccount: async (req, res) => {
+        const { accountId } = req.params
+
+        try {
+            const account = await accountsModel.findById(accountId)
+            if (!account) return res.status(404).json({ message: 'Account not found!' })
+
+            await accountsModel.updateOne({ _id: accountId }, { active: false })
+            return res.status(200).json({ message: 'Account deactivated successfully!' })
+        } catch (error) {
+            return res.status(500).json({ message: error.message })
+        }
+    },
+    deleteAccount: async (req, res) => {
+        const { accountId } = req.params
+
+        try {
+            const account = await accountsModel.findById(accountId)
+            if (!account) return res.status(404).json({ message: 'Account not found!' })
+
+            await accountsModel.deleteOne({ _id: accountId })
+
+            return res.status(200).json({ message: 'Account deleted successfully!' })
         } catch (error) {
             return res.status(500).json({ message: error.message })
         }

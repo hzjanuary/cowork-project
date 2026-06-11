@@ -77,6 +77,30 @@ const testController = {
             });
         }
     },
+    getTestsByUserId: async (req, res) => {
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required"
+            });
+        }
+
+        try {
+            const tests = await testModel.find({ userId });
+            return res.status(200).json({
+                success: true,
+                message: "Tests fetched successfully",
+                data: tests
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: "Error fetching tests",
+                error: error.message
+            });
+        }
+    },
     updateTest: async (req, res) => {
         const { id } = req.params;
         if (!id) {

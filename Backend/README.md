@@ -86,7 +86,7 @@ Most API endpoints require authentication or role guards, implemented in [auth.m
 - **JWT Authentication (`authToken`)**: Checks the `Authorization` header for `Bearer <JWT_TOKEN>`. Decodes the token to obtain the `accountId`, fetches the corresponding account from the database, and attaches it to `req.account` and `req.user`.
 - **Admin Guard (`checkAdmin`)**: Verifies that `req.account.role === 'admin'`. Returns `403 Forbidden` if the role is not admin.
 - **Teacher Guard (`checkTeacher`)**: Verifies that `req.account.role === 'teacher'` or `req.account.role === 'admin'`.
-- **Moderator Guard (`checkModerator`)**: Verifies that `req.account.role === 'moderator'` or `req.account.role === 'admin'`.
+- **Moderator Guard (`checkModerator`)**: Verifies that `req.account.role === 'moderator'` or `req.account.role === 'admin'`. *(Note: The moderator role was recently removed from the accounts schema, but this guard is still present in middlewares)*.
 - **Verification Guard (`checkVerify`)**: Verifies that the logged-in account has been verified via OTP (`req.account.isVerified === true`).
 
 ---
@@ -101,15 +101,19 @@ All routes are prefixed with `/api`.
 | **/accounts/sent-otp** | POST | Public | None | Resends a verification OTP to the user's email. |
 | **/accounts/verify-otp** | POST | Public | None | Verifies the OTP and activates the account. |
 | **/accounts/forgot-password** | POST | Public | None | Sends a password reset OTP to the user's email. |
+| **/accounts/reset-password** | POST | Public | None | Resets user password using OTP verification. |
 | **/accounts/login** | POST | Public | None | Authenticates credentials and returns a JWT token. |
+| **/accounts/change-password** | PUT | JWT Required | Any | Changes account password. |
 | **/accounts/profile** | GET | JWT Required | Any | Fetches account profile details by account ID. |
 | **/accounts/admin/accounts** | GET | JWT Required | `admin` | Retrieves a list of all user accounts (excluding passwords). |
 | **/accounts/update-role** | POST | JWT Required | `admin` (or first admin setup) | Updates the role of a specified account. |
+| **/accounts/verify-email** | POST | Public | None | Activates a deactivated account. |
+| **/accounts/deactivate** | POST | JWT Required | Any | Deactivates an active account. |
+| **/accounts/activate** | POST | JWT Required | Any | Deletes an account permanently (naming mismatch). |
 | **/users** | POST | JWT Required | Any | Creates a user profile containing personal information. |
 | **/users/me** | GET | JWT Required | Any | Fetches the profile of the currently logged-in user. |
 | **/users** | GET | JWT Required | `admin` | Fetches a list of all user profiles. |
 | **/users/:id** | PUT | JWT Required | Any | Updates user profile details (supports optional avatar file). |
-| **/users/change-password** | PUT | JWT Required | Any | Changes account password. |
 | **/users/upload-avatar** | POST | JWT Required | Any | Uploads a new user avatar to Cloudinary. |
 | **/fileuploads/upload** | POST | JWT Required | Any | Uploads a PDF or image file to Cloudinary and saves metadata. |
 | **/questions** | POST | JWT Required | Any | Creates a new question draft. |
@@ -124,6 +128,7 @@ All routes are prefixed with `/api`.
 | **/tests** | POST | JWT Required | Any | Creates a new test. |
 | **/tests** | GET | JWT Required | Any | Fetches all tests. |
 | **/tests/:id** | GET | JWT Required | Any | Fetches a specific test by ID. |
+| **/tests/user/:userId** | GET | JWT Required | Any | Fetches all tests created by a specific user ID. |
 | **/tests/:id** | PUT | JWT Required | Any | Updates test title, timeLimit, or visibility. |
 | **/tests/:id** | DELETE | JWT Required | Any | Deletes a test. |
 | **/tests/tests/:testId/start** | POST | JWT Required | Any | Initiates a test attempt, returning questions (hiding correct answers). |
@@ -147,7 +152,8 @@ Defined in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/a
     "username": "johndoe",
     "email": "johndoe@example.com",
     "password": "Password123!",
-    "confirmPassword": "Password123!"
+    "confirmPassword": "Password123!",
+    "role": "user"
   }
   ```
 * **Response (201 Created):**
@@ -207,7 +213,25 @@ Defined in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/a
   }
   ```
 
-#### 5. Login
+#### 5. Reset Password
+* **Route:** `POST /api/accounts/reset-password`
+* **Auth:** None (Public)
+* **Request Body:**
+  ```json
+  {
+    "email": "johndoe@example.com",
+    "password": "NewPassword123!",
+    "confirmPassword": "NewPassword123!"
+  }
+  ```
+* **Response (200 OK):**
+  ```json
+  {
+    "message": "Password reset successfully!"
+  }
+  ```
+
+#### 6. Login
 * **Route:** `POST /api/accounts/login`
 * **Auth:** None (Public)
 * **Request Body:**
@@ -230,7 +254,25 @@ Defined in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/a
   }
   ```
 
-#### 6. Get Account Profile
+#### 7. Change Password
+* **Route:** `PUT /api/accounts/change-password`
+* **Auth:** JWT Required (`Authorization: Bearer <token>`)
+* **Request Body:**
+  ```json
+  {
+    "currentPassword": "Password123!",
+    "newPassword": "NewPassword456!",
+    "confirmNewPassword": "NewPassword456!"
+  }
+  ```
+* **Response (200 OK):**
+  ```json
+  {
+    "message": "Password changed successfully!"
+  }
+  ```
+
+#### 8. Get Account Profile
 * **Route:** `GET /api/accounts/profile`
 * **Auth:** JWT Required (`Authorization: Bearer <token>`)
 * **Response (200 OK):**
@@ -241,12 +283,13 @@ Defined in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/a
     "email": "johndoe@example.com",
     "role": "user",
     "isVerified": true,
+    "active": true,
     "createdAt": "2026-06-10T10:00:00.000Z"
   }
   ```
   *(See Known Issues regarding params inside this controller)*
 
-#### 7. Get All Accounts
+#### 9. Get All Accounts
 * **Route:** `GET /api/accounts/admin/accounts`
 * **Auth:** JWT Required, Admin Role Required
 * **Response (200 OK):**
@@ -257,12 +300,13 @@ Defined in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/a
       "username": "johndoe",
       "email": "johndoe@example.com",
       "role": "user",
-      "isVerified": true
+      "isVerified": true,
+      "active": true
     }
   ]
   ```
 
-#### 8. Update Role
+#### 10. Update Role
 * **Route:** `POST /api/accounts/update-role`
 * **Auth:** JWT Required, Admin Role Required (except when no admins exist in DB yet)
 * **Request Body:**
@@ -285,6 +329,39 @@ Defined in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/a
   }
   ```
 
+#### 11. Verify Email (Activate Account)
+* **Route:** `POST /api/accounts/verify-email`
+* **Auth:** None (Public)
+* **Response (200 OK):**
+  ```json
+  {
+    "message": "Account activated successfully!"
+  }
+  ```
+  *(See Known Issues: This endpoint expects an `accountId` path parameter that is missing in its route mapping)*
+
+#### 12. Deactivate Account
+* **Route:** `POST /api/accounts/deactivate`
+* **Auth:** JWT Required
+* **Response (200 OK):**
+  ```json
+  {
+    "message": "Account deactivated successfully!"
+  }
+  ```
+  *(See Known Issues: This endpoint expects an `accountId` path parameter that is missing in its route mapping)*
+
+#### 13. Activate (Deletes Account)
+* **Route:** `POST /api/accounts/activate`
+* **Auth:** JWT Required
+* **Response (200 OK):**
+  ```json
+  {
+    "message": "Account deleted successfully!"
+  }
+  ```
+  *(See Known Issues: Naming mismatch / deletion behavior, and missing route parameter)*
+
 ---
 
 ### Users API (`/api/users`)
@@ -299,7 +376,8 @@ Defined in [users.routes.js](file:///d:/Individual%20Project/Backend/Routes/user
   {
     "fullName": "John Doe",
     "phoneNumber": "0987654321",
-    "dateOfBirth": "1995-12-17"
+    "dateOfBirth": "1995-12-17",
+    "gender": "male"
   }
   ```
 * **Response (201 Created):**
@@ -312,6 +390,7 @@ Defined in [users.routes.js](file:///d:/Individual%20Project/Backend/Routes/user
       "fullName": "John Doe",
       "phoneNumber": "0987654321",
       "dateOfBirth": "1995-12-17T00:00:00.000Z",
+      "gender": "male",
       "age": 30,
       "avatar": "http://localhost:5174/images/default-avatar.jpg"
     }
@@ -335,6 +414,7 @@ Defined in [users.routes.js](file:///d:/Individual%20Project/Backend/Routes/user
       "fullName": "John Doe",
       "phoneNumber": "0987654321",
       "dateOfBirth": "1995-12-17T00:00:00.000Z",
+      "gender": "male",
       "age": 30,
       "avatar": "https://res.cloudinary.com/..."
     }
@@ -356,7 +436,8 @@ Defined in [users.routes.js](file:///d:/Individual%20Project/Backend/Routes/user
           "role": "user"
         },
         "fullName": "John Doe",
-        "phoneNumber": "0987654321"
+        "phoneNumber": "0987654321",
+        "gender": "male"
       }
     ]
   }
@@ -370,6 +451,7 @@ Defined in [users.routes.js](file:///d:/Individual%20Project/Backend/Routes/user
   * `fullName` (Optional string)
   * `phoneNumber` (Optional string)
   * `dateOfBirth` (Optional ISO string date)
+  * `gender` (Optional string, enum `['male', 'female', 'other']`)
   * `avatar` (Optional file upload)
 * **Response (200 OK):**
   ```json
@@ -380,31 +462,14 @@ Defined in [users.routes.js](file:///d:/Individual%20Project/Backend/Routes/user
       "fullName": "John Updated Doe",
       "phoneNumber": "0987654321",
       "dateOfBirth": "1995-12-17T00:00:00.000Z",
+      "gender": "male",
       "age": 30,
       "avatar": "https://res.cloudinary.com/..."
     }
   }
   ```
 
-#### 5. Change Password
-* **Route:** `PUT /api/users/change-password`
-* **Auth:** JWT Required
-* **Request Body:**
-  ```json
-  {
-    "currentPassword": "Password123!",
-    "newPassword": "NewPassword456!",
-    "confirmNewPassword": "NewPassword456!"
-  }
-  ```
-* **Response (200 OK):**
-  ```json
-  {
-    "message": "Password changed successfully!"
-  }
-  ```
-
-#### 6. Upload Avatar
+#### 5. Upload Avatar
 * **Route:** `POST /api/users/upload-avatar`
 * **Auth:** JWT Required
 * **Headers:** `Content-Type: multipart/form-data`
@@ -691,7 +756,26 @@ Defined in [tests.routes.js](file:///d:/Individual%20Project/Backend/Routes/test
   }
   ```
 
-#### 4. Update Test
+#### 4. Get Tests by Creator User ID
+* **Route:** `GET /api/tests/user/:userId`
+* **Auth:** JWT Required
+* **Response (200 OK):**
+  ```json
+  {
+    "success": true,
+    "message": "Tests fetched successfully",
+    "data": [
+      {
+        "_id": "60d1000f5311236168a109d5",
+        "title": "General Knowledge Quiz",
+        "timeLimit": 30,
+        "visibility": "public"
+      }
+    ]
+  }
+  ```
+
+#### 5. Update Test
 * **Route:** `PUT /api/tests/:id`
 * **Auth:** JWT Required
 * **Request Body:**
@@ -716,7 +800,7 @@ Defined in [tests.routes.js](file:///d:/Individual%20Project/Backend/Routes/test
   }
   ```
 
-#### 5. Delete Test
+#### 6. Delete Test
 * **Route:** `DELETE /api/tests/:id`
 * **Auth:** JWT Required
 * **Response (200 OK):**
@@ -730,7 +814,7 @@ Defined in [tests.routes.js](file:///d:/Individual%20Project/Backend/Routes/test
   }
   ```
 
-#### 6. Start Test Attempt
+#### 7. Start Test Attempt
 * **Route:** `POST /api/tests/tests/:testId/start`
 * **Auth:** JWT Required
 * **Response (200 OK):** Creates a test attempt. Returns details of the test and list of questions, omitting answers to prevent cheating.
@@ -759,7 +843,7 @@ Defined in [tests.routes.js](file:///d:/Individual%20Project/Backend/Routes/test
   ```
   *(See Known Issues regarding `testAttemptModel` import)*
 
-#### 7. Submit Test Attempt
+#### 8. Submit Test Attempt
 * **Route:** `POST /api/tests/test-attempts/submit`
 * **Auth:** JWT Required
 * **Request Body:**
@@ -784,7 +868,7 @@ Defined in [tests.routes.js](file:///d:/Individual%20Project/Backend/Routes/test
   }
   ```
 
-#### 8. Get Test Attempt Results
+#### 9. Get Test Attempt Results
 * **Route:** `GET /api/tests/test-attempts/:testAttemptId/results`
 * **Auth:** JWT Required
 * **Response (200 OK):**
@@ -854,15 +938,17 @@ The application uses the following MongoDB collections via Mongoose:
 * **`username`**: String, required
 * **`email`**: String, required, unique
 * **`password`**: String (bcrypt hashed), required
-* **`role`**: String, enum `['user', 'teacher', 'moderator', 'admin']`, default `'user'`
+* **`role`**: String, enum `['user', 'teacher', 'admin']`, default `'user'`, required: true *(Note: `moderator` role was deleted)*
 * **`isVerified`**: Boolean, default `false`
 * **`resetAllowed`**: Boolean, default `false`
+* **`active`**: Boolean, default `true` *(Added recently)*
 
 ### 2. Users (`Users`)
 * **`accountId`**: ObjectId ref `accounts`
 * **`fullName`**: String, required
 * **`phoneNumber`**: String, required
 * **`dateOfBirth`**: Date, required
+* **`gender`**: String, enum `['male', 'female', 'other']`, required: true *(Added recently)*
 * **`age`**: Number, required
 * **`avatar`**: String, default placeholder avatar URL
 
@@ -919,10 +1005,17 @@ The application uses the following MongoDB collections via Mongoose:
 
 ## Known Issues & Codebase Health Notes
 
-While generating this documentation, several code mismatches and potential bugs were identified in the backend:
+Several mismatches, incomplete implementations, and bugs remain in the backend code:
 
-1. **Missing Password Reset Route:** The route `POST /api/accounts/reset-password` is never declared in [accounts.routes.js](file:///d:/Individual%20Project/Backend/Routes/accounts.routes.js), although `resetPassword` is fully implemented in [accounts.controllers.js](file:///d:/Individual%20Project/Backend/Controllers/accounts.controllers.js).
-2. **Missing `testAttemptModel` Import:** In [tests.controllers.js](file:///d:/Individual%20Project/Backend/Controllers/tests.controllers.js), `testAttemptModel` is used in functions `startTest` and `submitTest` but is never imported at the top of the file, which will cause runtime reference errors.
-3. **Broken Imports in `processing.services.js`:** The file [processing.services.js](file:///d:/Individual%20Project/Backend/Services/processing.services.js) tries to import `FileUpload` and `Question` models using lowercase folder paths (`../models/FileUpload.js` instead of `../Models/fileUpload.models.js`), which fails due to case sensitivity. Additionally, the service is never invoked from any controller.
-4. **Missing `next()` in `checkTeacher`:** The middleware function `checkTeacher` in [auth.middlewares.js](file:///d:/Individual%20Project/Backend/Middlewares/auth.middlewares.js) checks if the role is teacher/admin but does not call `next()` on success, meaning requests passing this middleware will hang indefinitely.
-5. **Params mismatch in `getAccountById`:** The `/profile` route uses `authToken` and calls `getAccountById`. However, `getAccountById` expects `req.params.accountId` to be set, which is not populated on `/profile` unless it was structured as `/profile/:accountId`.
+1. **Missing Route Parameters in Verify Email, Deactivate, and Activate Routes**:
+   The routes `POST /api/accounts/verify-email`, `POST /api/accounts/deactivate`, and `POST /api/accounts/activate` are mapped to controller methods that extract `accountId` from `req.params.accountId`. However, the routes themselves do not specify any `:accountId` path parameters, meaning `req.params.accountId` will be `undefined`, causing database failures when called.
+2. **Routing/Controller Naming and Action Mismatch for Delete Route**:
+   The route `POST /api/accounts/activate` is mapped to `accountController.deleteAccount`, which performs a permanent deletion (`deleteOne`) of the account database record, rather than activating it.
+3. **Missing `testAttemptModel` Import**:
+   In [tests.controllers.js](file:///d:/Individual%20Project/Backend/Controllers/tests.controllers.js), `testAttemptModel` is used in functions `startTest` and `submitTest` but is never imported at the top of the file, causing runtime reference errors.
+4. **Broken Imports in `processing.services.js`**:
+   The file [processing.services.js](file:///d:/Individual%20Project/Backend/Services/processing.services.js) tries to import `FileUpload` and `Question` models using lowercase folder paths (`../models/FileUpload.js` instead of `../Models/fileUpload.models.js`), which fails due to case sensitivity. Additionally, the service is never invoked from any controller.
+5. **Missing `next()` in `checkTeacher`**:
+   The middleware function `checkTeacher` in [auth.middlewares.js](file:///d:/Individual%20Project/Backend/Middlewares/auth.middlewares.js) checks if the role is teacher/admin but does not call `next()` on success, meaning requests passing this middleware will hang indefinitely.
+6. **Params mismatch in `getAccountById`**:
+   The `/profile` route uses `authToken` and calls `getAccountById`. However, `getAccountById` expects `req.params.accountId` to be set, which is not populated on `/profile` unless it was structured as `/profile/:accountId`.

@@ -9,7 +9,6 @@ usersRouter.post("/", authToken, userControllers.createUser);
 usersRouter.get("/me", authToken, userControllers.getCurrentUser);
 usersRouter.get("/", authToken, checkAdmin, userControllers.getAllUsers);
 usersRouter.put("/:id", authToken, userControllers.updateUser);
-usersRouter.put("/change-password", authToken, userControllers.changePassword);
 usersRouter.post("/upload-avatar", authToken, avatarUpload.single('avatar'), userControllers.updateAvatar);
 
 export default usersRouter;
