@@ -132,7 +132,7 @@ export const UserProvider = ({ children }) => {
         console.log('🔑 [changePassword] Starting password change');
         setError(null);
         try {
-            const res = await instance.put('/api/users/change-password', {
+            const res = await instance.put('/api/accounts/change-password', {
                 currentPassword,
                 newPassword,
                 confirmNewPassword

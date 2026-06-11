@@ -9,11 +9,10 @@ import {
     TrophyOutlined
 } from '@ant-design/icons';
 import { useTest } from '../../hooks/useTest.js';
-import instance from '../../config/axiosConfig.js';
 
 const StudentDashboard = () => {
     const navigate = useNavigate();
-    const { tests, getAllTests, isLoading } = useTest();
+    const { tests, getAllTests, getMyTestAttempts, isLoading } = useTest();
     const [attempts, setAttempts] = useState([]);
     const [joinCode, setJoinCode] = useState('');
     const [attemptsLoading, setAttemptsLoading] = useState(false);
@@ -37,8 +36,8 @@ const StudentDashboard = () => {
     const fetchAttempts = async () => {
         try {
             setAttemptsLoading(true);
-            const res = await instance.get('/api/tests/test-attempts/me');
-            setAttempts(Array.isArray(res.data.data) ? res.data.data : []);
+            const data = await getMyTestAttempts();
+            setAttempts(Array.isArray(data) ? data : []);
         } catch (error) {
             toast.error(error.response?.data?.message || 'Could not load recent attempts.');
         } finally {
@@ -48,6 +47,7 @@ const StudentDashboard = () => {
 
     useEffect(() => {
         getAllTests().catch((error) => toast.error(error.response?.data?.message || 'Could not load tests.'));
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchAttempts();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

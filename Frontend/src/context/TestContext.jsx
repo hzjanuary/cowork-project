@@ -106,6 +106,21 @@ export const TestProvider = ({ children }) => {
         }
     }
 
+    const getMyTestAttempts = async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const res = await instance.get('/api/tests/test-attempts/me');
+            return res.data.data || [];
+        } catch (err) {
+            setError(err.response?.data?.message || err.message);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     const updateTest = async (testId, { title, timeLimit, visibility }) => {
         setIsLoading(true);
         setError(null);
@@ -155,7 +170,8 @@ export const TestProvider = ({ children }) => {
             deleteTest,
             startTest,
             submitTest,
-            getTestResults
+            getTestResults,
+            getMyTestAttempts
         }}>
             {children}
         </TestContext.Provider>
