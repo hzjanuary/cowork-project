@@ -110,8 +110,9 @@ export const AuthProvider = ({ children }) => {
         return res.data;
     }
 
-    const resetPassword = async () => {
-        throw new Error('Password reset submission is not available because the backend reset-password route is not declared.');
+    const resetPassword = async (email, password, confirmPassword) => {
+        const res = await instance.post('/api/accounts/reset-password', { email, password, confirmPassword });
+        return res.data;
     }
 
     return (

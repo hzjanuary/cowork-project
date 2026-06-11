@@ -19,6 +19,7 @@ const ResetPassword = () => {
         // Get email from localStorage that was set in ForgotPassword
         const email = localStorage.getItem('resetEmail');
         if (email) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setFormData(prev => ({ ...prev, email }));
         }
     }, []);

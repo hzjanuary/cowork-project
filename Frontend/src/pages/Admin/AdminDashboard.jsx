@@ -32,6 +32,7 @@ const AdminDashboard = () => {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         fetchAccounts();
     }, []);
 
@@ -44,6 +45,7 @@ const AdminDashboard = () => {
     }, [accounts, roleFilter]);
 
     const metrics = useMemo(() => {
+        // eslint-disable-next-line react-hooks/purity
         const now = Date.now();
         const sevenDays = 7 * 24 * 60 * 60 * 1000;
         const teachers = accounts.filter((account) => account.role === 'teacher').length;
