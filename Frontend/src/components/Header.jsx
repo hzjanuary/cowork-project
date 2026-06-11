@@ -11,10 +11,12 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth.js';
 import ThemeToggle from './ThemeToggle.jsx';
+import { getRoleHomePath, normalizeRole } from '../routes/roleRoutes.js';
 
 const Header = () => {
     const navigate = useNavigate();
     const { account, isAuthenticated, logout } = useAuth();
+    const role = normalizeRole(account?.role);
 
     const profileMenuItems = [
         {
@@ -48,9 +50,9 @@ const Header = () => {
 
             {isAuthenticated && (
                 <nav className="main-nav" aria-label="Primary">
-                    <NavLink to="/" end><HomeOutlined /> Home</NavLink>
-                    <NavLink to="/tests"><ReadOutlined /> Tests</NavLink>
-                    <NavLink to="/questions"><FileSearchOutlined /> Questions</NavLink>
+                    <NavLink to={getRoleHomePath(account?.role)} end><HomeOutlined /> Home</NavLink>
+                    {role === 'teacher' && <NavLink to="/tests"><ReadOutlined /> Tests</NavLink>}
+                    {role === 'teacher' && <NavLink to="/questions"><FileSearchOutlined /> Questions</NavLink>}
                     <NavLink to="/faq"><QuestionCircleOutlined /> FAQ</NavLink>
                 </nav>
             )}

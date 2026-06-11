@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { LoginOutlined } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth.js';
+import { getRoleHomePath } from '../../routes/roleRoutes.js';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -16,9 +17,9 @@ const Login = () => {
         event.preventDefault();
         try {
             setIsLoading(true);
-            await login(form);
+            const account = await login(form);
             toast.success('Login successful.');
-            navigate('/');
+            navigate(getRoleHomePath(account.role), { replace: true });
         } catch (error) {
             toast.error(error.response?.data?.message || 'Login failed.');
         } finally {

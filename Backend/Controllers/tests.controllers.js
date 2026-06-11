@@ -1,5 +1,6 @@
-import { get } from 'mongoose';
 import testModel from '../Models/tests.models.js';
+import testAttemptModel from '../Models/testAttempts.models.js';
+import questionModel from '../Models/questions.models.js';
 
 const testController = {
     createTest: async (req, res) => {
@@ -171,7 +172,7 @@ const testController = {
     startTest: async (req, res) => {
         try {
             const { testId } = req.params;
-            const studentId = req.user.id; // from auth middleware
+            const studentId = req.account._id;
 
             // Check if test exists and has questions
             const test = await testModel.findById(testId).populate('questions');
@@ -272,6 +273,26 @@ const testController = {
             });
         } catch (error) {
             return res.status(500).json({ error: error.message });
+        }
+    },
+    getMyTestAttempts: async (req, res) => {
+        try {
+            const attempts = await testAttemptModel
+                .find({ studentId: req.account._id })
+                .populate('testId', 'title timeLimit visibility')
+                .sort({ updatedAt: -1 })
+                .limit(10);
+
+            return res.status(200).json({
+                success: true,
+                data: attempts
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching test attempts',
+                error: error.message
+            });
         }
     }
 }
