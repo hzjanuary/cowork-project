@@ -5,12 +5,18 @@ import { Router } from "express";
 const accountsRouter = Router();
 
 accountsRouter.post("/register", registerValidation, accountController.createAccount);
-accountsRouter.post ('/sent-otp', accountController.sendOtp);
-accountsRouter.post ('/verify-otp', accountController.verifyOtp);
-accountsRouter.post ('/forgot-password', accountController.forgetPassword);
+accountsRouter.post('/sent-otp', accountController.sendOtp);
+accountsRouter.post('/verify-otp', accountController.verifyOtp);
+accountsRouter.post('/forgot-password', accountController.forgetPassword);
+accountsRouter.post("/reset-password", accountController.resetPassword);
 accountsRouter.post("/login", loginValidation, accountController.loginAccount);
+accountsRouter.put("/change-password", authToken, accountController.changePassword);
 accountsRouter.get("/profile", authToken, accountController.getAccountById);
 accountsRouter.get("/admin/accounts", authToken, checkAdmin, accountController.getAllAccounts);
 accountsRouter.post("/update-role", authToken, accountController.updateRole);
+accountsRouter.post("/verify-email", accountController.activateAccount);
+accountsRouter.post("/deactivate", authToken, accountController.deActivateAccount);
+accountsRouter.post("/activate", authToken, accountController.activateAccount);
+accountsRouter.delete("/delete", authToken, accountController.deleteAccount);
 
 export default accountsRouter;
