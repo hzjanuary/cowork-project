@@ -1,10 +1,15 @@
 import testModel from '../Models/tests.models.js';
 import testAttemptModel from '../Models/testAttempts.models.js';
 import questionModel from '../Models/questions.models.js';
+import mongoose from 'mongoose';
+
+const hasInvalidQuestionIds = (questions) => (
+    questions.some((questionId) => !mongoose.Types.ObjectId.isValid(questionId))
+);
 
 const testController = {
     createTest: async (req, res) => {
-        const { title, userId, timeLimit, visibility } = req.body;
+        const { title, userId, timeLimit, visibility, questions = [] } = req.body;
         if (!title || !userId) {
             return res.status(400).json({
                 success: false,
@@ -13,9 +18,34 @@ const testController = {
         }
 
         try {
+            if (!Array.isArray(questions)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "questions must be an array of question IDs"
+                });
+            }
+            if (hasInvalidQuestionIds(questions)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "questions contains an invalid question ID"
+                });
+            }
+
+            const questionCount = questions.length
+                ? await questionModel.countDocuments({ _id: { $in: questions } })
+                : 0;
+
+            if (questionCount !== questions.length) {
+                return res.status(400).json({
+                    success: false,
+                    message: "One or more selected questions do not exist"
+                });
+            }
+
             const newTest = new testModel({
                 title,
                 userId,
+                questions,
                 timeLimit: timeLimit || 0,
                 visibility: visibility || "private"
             });
@@ -58,17 +88,31 @@ const testController = {
             });
         }
         try {
-            const test = await testModel.findById(id);
+            const test = await testModel.findById(id).populate('questions');
             if (!test) {
                 return res.status(404).json({
                     success: false,
                     message: "Test not found"
                 });
             }
+            const testData = test.toObject();
+            if (!['teacher', 'admin'].includes(req.account?.role)) {
+                testData.questions = (testData.questions || []).map((question) => ({
+                    _id: question._id,
+                    questionText: question.questionText,
+                    type: question.type,
+                    options: question.options?.map((option) => ({
+                        label: option.label,
+                        text: option.text
+                    })),
+                    difficulty: question.difficulty
+                }));
+            }
+
             return res.status(200).json({
                 success: true,
                 message: "Test fetched successfully",
-                data: test
+                data: testData
             });
         } catch (error) {
             return res.status(500).json({
@@ -120,10 +164,37 @@ const testController = {
                 });
             }
 
-            const { title, timeLimit, visibility } = req.body;
+            const { title, timeLimit, visibility, questions } = req.body;
+            if (questions !== undefined && !Array.isArray(questions)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "questions must be an array of question IDs"
+                });
+            }
+
+            if (Array.isArray(questions)) {
+                if (hasInvalidQuestionIds(questions)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "questions contains an invalid question ID"
+                    });
+                }
+
+                const questionCount = questions.length
+                    ? await questionModel.countDocuments({ _id: { $in: questions } })
+                    : 0;
+
+                if (questionCount !== questions.length) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "One or more selected questions do not exist"
+                    });
+                }
+            }
+
             const updatedTest = await testModel.findByIdAndUpdate(
                 id,
-                { title, timeLimit, visibility },
+                { title, timeLimit, visibility, ...(questions !== undefined ? { questions } : {}) },
                 { new: true }
             );
             return res.status(200).json({
@@ -174,20 +245,28 @@ const testController = {
             const { testId } = req.params;
             const studentId = req.account._id;
 
-            // Check if test exists and has questions
             const test = await testModel.findById(testId).populate('questions');
             if (!test) return res.status(404).json({ error: "Test not found" });
 
-            // Create new attempt
+            const questions = test.questions?.length
+                ? test.questions
+                : await questionModel.find({ testId: test._id });
+
+            if (!questions.length) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Test has no questions"
+                });
+            }
+
             const testAttempt = new testAttemptModel({
                 testId,
                 studentId,
-                answers: test.questions.map(q => ({ questionId: q._id }))
+                answers: questions.map(q => ({ questionId: q._id }))
             });
 
             await testAttempt.save();
 
-            // Return test with questions (without answers)
             return res.status(200).json({
                 success: true,
                 testAttemptId: testAttempt._id,
@@ -195,13 +274,15 @@ const testController = {
                     _id: test._id,
                     title: test.title,
                     timeLimit: test.timeLimit,
-                    questions: test.questions.map(q => ({
+                    questions: questions.map(q => ({
                         _id: q._id,
                         questionText: q.questionText,
                         type: q.type,
-                        options: q.options,
+                        options: q.options?.map(option => ({
+                            label: option.label,
+                            text: option.text
+                        })),
                         difficulty: q.difficulty
-                        // Don't send the answer!
                     }))
                 }
             });
@@ -235,11 +316,19 @@ const testController = {
             for (let ans of testAttempt.answers) {
                 const question = await questionModel.findById(ans.questionId);
 
-                if (question.type === "multiple_choice" || question.type === "true_false") {
-                    ans.isCorrect = ans.studentAnswer === question.answer;
+                if (question.type === "multiple_choice") {
+                    const correctOption = question.options?.find(option => option.isCorrect);
+                    ans.isCorrect = ans.studentAnswer === question.answer
+                        || ans.studentAnswer === correctOption?.label
+                        || ans.studentAnswer === correctOption?.text;
+                    ans.points = ans.isCorrect ? 1 : 0;
+                } else if (question.type === "true_false") {
+                    ans.isCorrect = String(ans.studentAnswer).toLowerCase() === String(question.answer).toLowerCase();
+                    ans.points = ans.isCorrect ? 1 : 0;
+                } else if (question.type === "short_answer") {
+                    ans.isCorrect = String(ans.studentAnswer || '').trim().toLowerCase() === String(question.answer || '').trim().toLowerCase();
                     ans.points = ans.isCorrect ? 1 : 0;
                 }
-                // short_answer questions need manual grading
             }
 
             testAttempt.totalScore = testAttempt.answers.reduce((sum, a) => sum + (a.points || 0), 0);

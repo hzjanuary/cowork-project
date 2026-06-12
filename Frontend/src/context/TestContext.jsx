@@ -10,13 +10,14 @@ export const TestProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const createTest = async({ title, userId, timeLimit, visibility }) => {
+    const createTest = async({ title, userId, timeLimit, visibility, questions = [] }) => {
         setIsLoading(true);
         setError(null);
         try {
             const res = await instance.post('/api/tests', {
                 title,
                 userId,
+                questions,
                 timeLimit: timeLimit || 0,
                 visibility: visibility || 'private'
             });
@@ -121,14 +122,15 @@ export const TestProvider = ({ children }) => {
         }
     }
 
-    const updateTest = async (testId, { title, timeLimit, visibility }) => {
+    const updateTest = async (testId, { title, timeLimit, visibility, questions }) => {
         setIsLoading(true);
         setError(null);
         try {
             const res = await instance.put(`/api/tests/${testId}`, {
                 title,
                 timeLimit,
-                visibility
+                visibility,
+                questions
             });
             const updatedTests = tests.map(t => t._id === testId ? res.data.data : t);
             setTests(updatedTests);
