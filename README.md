@@ -1,44 +1,8 @@
 # Quizzle
 
-Quizzle is a quiz and test management web app for creating question banks, building timed tests, uploading learning source files, and managing authenticated user workflows.
+Quizzle is a full-stack quiz and test management app for teachers, students, and admins. It includes authentication, role-based dashboards, question and test workflows, file uploads for learning materials, and supporting OCR/AI utilities on the backend.
 
-The project is split into two applications:
-
-- `Backend`: Express, MongoDB/Mongoose, JWT authentication, Cloudinary upload support, OCR/AI utilities, and API routes.
-- `Frontend`: React/Vite app with a refactored Quizzle UI, protected routes, auth screens, dashboards, question management, test management, upload entry point, profile, and FAQ.
-
-## Main Features
-
-- Account registration, email OTP verification, login, and JWT-protected access.
-- Question bank for multiple choice, true/false, and short answer questions.
-- Test studio for creating, listing, filtering, and deleting timed tests.
-- Authenticated file upload entry point for image/PDF source material.
-- Profile creation and password change forms.
-- Purple-gradient Quizzle design system with responsive layout and dark mode support.
-
-## Tech Stack
-
-Backend:
-
-- Node.js
-- Express
-- MongoDB with Mongoose
-- JWT
-- bcrypt / bcryptjs
-- multer and Cloudinary
-- Tesseract/OpenAI-related utilities
-
-Frontend:
-
-- React 19
-- Vite
-- React Router
-- Axios
-- Ant Design icons/components
-- React Toastify
-- CSS custom properties
-
-## Project Structure
+## Repository layout
 
 ```text
 .
@@ -49,22 +13,41 @@ Frontend:
 │   ├── Models
 │   ├── Routes
 │   ├── Services
+│   ├── Tests
 │   ├── Utils
+│   ├── postman
 │   └── server.js
 ├── Frontend
 │   ├── public
-│   ├── src
-│   │   ├── components
-│   │   ├── config
-│   │   ├── context
-│   │   ├── hooks
-│   │   ├── pages
-│   │   └── routes
-│   └── vite.config.js
+│   └── src
+│       ├── components
+│       ├── config
+│       ├── context
+│       ├── hooks
+│       ├── pages
+│       └── routes
 └── README.md
 ```
 
-## Backend Setup
+## What it does
+
+- Account registration, OTP verification, password reset, and login.
+- Role-aware navigation for admin, teacher, student, and user accounts.
+- Question creation, answering, review, editing, and deletion.
+- Test creation, test taking, grading, and result viewing.
+- User profile management and avatar upload.
+- File upload support for source material used by the app.
+
+## Tech stack
+
+| Area | Stack |
+|---|---|
+| Backend | Node.js, Express, MongoDB, Mongoose, JWT, bcrypt, Nodemailer, Multer, Cloudinary, Tesseract, OpenAI/Ollama helpers |
+| Frontend | React 19, Vite, React Router, Axios, Ant Design, MUI, React Toastify, Tailwind CSS |
+
+## Getting started
+
+### Backend
 
 ```bash
 cd Backend
@@ -72,15 +55,9 @@ npm install
 npm start
 ```
 
-The backend mounts routes under `/api` and expects environment values in `Backend/.env`, including MongoDB, JWT, Cloudinary, mail, and AI/OCR-related configuration as needed by the existing code.
+The backend starts from `server.js`, mounts routes under `/api`, and listens on `PORT` or `5000`. It also expects `MONGO_URI` and the other environment values used by the auth, upload, mail, and AI/OCR helpers.
 
-Default server behavior:
-
-- Root route: `GET /`
-- API base: `/api`
-- CORS origin: `http://localhost:5173`
-
-## Frontend Setup
+### Frontend
 
 ```bash
 cd Frontend
@@ -88,47 +65,90 @@ npm install
 npm run dev
 ```
 
-Default frontend URL:
+The Vite app runs at `http://localhost:5173/`.
 
-```text
-http://localhost:5173/
-```
-
-Production build:
+### Frontend checks
 
 ```bash
 cd Frontend
 npm run build
-```
-
-Lint:
-
-```bash
-cd Frontend
 npm run lint
 ```
 
-## Important API Areas
+## Implemented backend routes
+
+### Accounts
 
 - `POST /api/accounts/register`
 - `POST /api/accounts/sent-otp`
 - `POST /api/accounts/verify-otp`
+- `POST /api/accounts/forgot-password`
+- `POST /api/accounts/verify-reset-otp`
+- `POST /api/accounts/reset-password`
 - `POST /api/accounts/login`
+- `PUT /api/accounts/change-password`
+- `GET /api/accounts/profile`
+- `GET /api/accounts/admin/accounts`
+- `POST /api/accounts/admin/accounts/:accountId/activate`
+- `POST /api/accounts/admin/accounts/:accountId/deactivate`
+- `DELETE /api/accounts/admin/accounts/:accountId`
+- `POST /api/accounts/update-role`
+- `POST /api/accounts/activate`
+- `POST /api/accounts/deactivate`
+- `DELETE /api/accounts/delete`
+
+### Users
+
 - `POST /api/users`
+- `GET /api/users/me`
+- `GET /api/users`
 - `PUT /api/users/:id`
-- `PUT /api/users/change-password`
-- `POST /api/fileuploads/upload`
-- `GET /api/questions`
+- `POST /api/users/upload-avatar`
+
+### Questions
+
 - `POST /api/questions`
-- `PUT /api/questions/:id`
-- `DELETE /api/questions/:id`
-- `GET /api/tests`
+- `GET /api/questions`
+- `POST /api/questions/answer/:id`
+- `PUT /api/questions/review/:id`
+- `PUT /api/questions/edit/:id`
+- `DELETE /api/questions/delete/:id`
+- `GET /api/questions/test/:testId`
+- `GET /api/questions/user/:userId`
+- `GET /api/questions/:id`
+
+### Tests
+
 - `POST /api/tests`
+- `GET /api/tests`
+- `GET /api/tests/user/:userId`
+- `GET /api/tests/test-attempts/me`
+- `GET /api/tests/test-attempts/pending-grading`
+- `POST /api/tests/tests/:testId/start`
+- `POST /api/tests/test-attempts/submit`
+- `PUT /api/tests/test-attempts/:testAttemptId/grade`
+- `GET /api/tests/test-attempts/:testAttemptId/results`
+- `GET /api/tests/:id`
 - `PUT /api/tests/:id`
 - `DELETE /api/tests/:id`
 
+### File uploads
+
+- `POST /api/fileuploads/upload`
+
+## Frontend routes and pages
+
+The React app is organized around auth screens, role landing pages, dashboards, profile management, question workflows, test workflows, and a FAQ page.
+
+Main route groups include:
+
+- Public: `/`, `/login`, `/register`, `/verify-otp`, `/forgot-password`, `/reset-password`, `/faq`
+- Admin: `/admin`
+- Teacher: `/teacher`, `/teacher/review`, `/teacher/grading`
+- Student/user: `/student`, `/questions/new`, `/tests/:id/do`
+- Shared protected pages: `/profile`, `/questions`, `/tests`, `/tests/new`
+
 ## Notes
 
-The frontend refactor intentionally avoids backend source changes. Some backend routes and role guards still have implementation inconsistencies, so the current UI focuses on stable workflows that map directly to available API behavior.
-
-See [REFACTOR_CHANGES.md](./REFACTOR_CHANGES.md) for a summary of the main changes from the original project to the Quizzle refactor.
+- The frontend uses a role-based landing redirect from `/` to the correct dashboard.
+- See `Backend/README.md` for the detailed backend API reference.

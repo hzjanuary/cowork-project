@@ -7,8 +7,10 @@ import { useAuth } from '../../hooks/useAuth.js';
 const OTPVerify = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { verifyOtp, sendOtp } = useAuth();
-    const email = location.state?.email || '';
+    const { verifyOtp, verifyResetOtp, sendOtp, forgotPassword } = useAuth();
+    const mode = location.state?.mode || 'verify';
+    const email = location.state?.email || localStorage.getItem('resetEmail') || '';
+    const isResetMode = mode === 'reset';
     const [pin, setPin] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -21,9 +23,16 @@ const OTPVerify = () => {
 
         try {
             setIsLoading(true);
-            await verifyOtp(email, pin);
-            toast.success('Email verified. You can login now.');
-            navigate('/login');
+            if (isResetMode) {
+                await verifyResetOtp(email, pin);
+                localStorage.setItem('resetEmail', email);
+                toast.success('OTP verified. Choose a new password.');
+                navigate('/reset-password', { state: { email } });
+            } else {
+                await verifyOtp(email, pin);
+                toast.success('Email verified. You can login now.');
+                navigate('/login');
+            }
         } catch (error) {
             toast.error(error.response?.data?.message || 'OTP verification failed.');
         } finally {
@@ -33,7 +42,11 @@ const OTPVerify = () => {
 
     const handleResend = async () => {
         try {
-            await sendOtp(email);
+            if (isResetMode) {
+                await forgotPassword(email);
+            } else {
+                await sendOtp(email);
+            }
             toast.success('OTP sent again.');
         } catch (error) {
             toast.error(error.response?.data?.message || 'Could not resend OTP.');
@@ -44,12 +57,12 @@ const OTPVerify = () => {
         <section className="auth-card">
             <div className="auth-art">
                 <span>証</span>
-                <h1>Verify email</h1>
-                <p>Enter the PIN sent to your inbox to activate backend access.</p>
+                <h1>{isResetMode ? 'Verify reset' : 'Verify email'}</h1>
+                <p>{isResetMode ? 'Enter the PIN sent to your inbox before setting a new password.' : 'Enter the PIN sent to your inbox to activate backend access.'}</p>
             </div>
             <form className="auth-form" onSubmit={handleSubmit}>
                 <span className="eyebrow">OTP</span>
-                <h2>Confirm your account</h2>
+                <h2>{isResetMode ? 'Confirm reset request' : 'Confirm your account'}</h2>
                 <label>
                     Email
                     <input value={email} readOnly />
@@ -64,7 +77,9 @@ const OTPVerify = () => {
                 <button className="btn btn-secondary" disabled={!email} onClick={handleResend} type="button">
                     <MailOutlined /> Resend OTP
                 </button>
-                <p className="muted">Wrong email? <Link to="/register">Register again</Link></p>
+                <p className="muted">
+                    Wrong email? <Link to={isResetMode ? '/forgot-password' : '/register'}>{isResetMode ? 'Start again' : 'Register again'}</Link>
+                </p>
             </form>
         </section>
     );

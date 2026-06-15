@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { SaveOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar } from 'antd';
@@ -7,17 +7,40 @@ import { useUser } from '../hooks/useUser.js';
 
 const Profile = () => {
     const { account } = useAuth();
-    const { createUser, changePassword, isLoading } = useUser();
-    const [profile, setProfile] = useState({ fullName: '', phoneNumber: '', dateOfBirth: '' });
+    const { user, createUser, updateUser, getCurrentUser, changePassword, isLoading } = useUser();
+    const [profile, setProfile] = useState({ fullName: '', phoneNumber: '', dateOfBirth: '', gender: '' });
     const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+
+    useEffect(() => {
+        getCurrentUser()
+            .then((currentUser) => {
+                setProfile({
+                    fullName: currentUser.fullName || '',
+                    phoneNumber: currentUser.phoneNumber || '',
+                    dateOfBirth: currentUser.dateOfBirth ? currentUser.dateOfBirth.slice(0, 10) : '',
+                    gender: currentUser.gender || ''
+                });
+            })
+            .catch(() => {});
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const updateProfile = (field, value) => setProfile((current) => ({ ...current, [field]: value }));
     const updatePassword = (field, value) => setPasswords((current) => ({ ...current, [field]: value }));
 
-    const handleCreateProfile = async (event) => {
+    const handleSaveProfile = async (event) => {
         event.preventDefault();
+        if (!profile.fullName.trim() || !profile.phoneNumber.trim() || !profile.dateOfBirth || !profile.gender) {
+            toast.error('Please fill in all profile fields.');
+            return;
+        }
+
         try {
-            await createUser(profile);
+            if (user?._id) {
+                await updateUser(user._id, profile);
+            } else {
+                await createUser(profile);
+            }
             toast.success('Profile saved.');
         } catch (error) {
             toast.error(error.response?.data?.message || 'Profile could not be saved.');
@@ -47,7 +70,7 @@ const Profile = () => {
             </section>
 
             <section className="workspace-grid two">
-                <form className="form-panel" onSubmit={handleCreateProfile}>
+                <form className="form-panel" onSubmit={handleSaveProfile}>
                     <div className="panel-heading">
                         <h2>Learning profile</h2>
                     </div>
@@ -62,6 +85,15 @@ const Profile = () => {
                     <label>
                         Date of birth
                         <input type="date" value={profile.dateOfBirth} onChange={(event) => updateProfile('dateOfBirth', event.target.value)} />
+                    </label>
+                    <label>
+                        Gender
+                        <select value={profile.gender} onChange={(event) => updateProfile('gender', event.target.value)}>
+                            <option value="">Select gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </label>
                     <button className="btn btn-primary" disabled={isLoading} type="submit">
                         <SaveOutlined /> Save profile

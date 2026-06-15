@@ -8,6 +8,7 @@ accountsRouter.post("/register", registerValidation, accountController.createAcc
 accountsRouter.post('/sent-otp', accountController.sendOtp);
 accountsRouter.post('/verify-otp', accountController.verifyOtp);
 accountsRouter.post('/forgot-password', accountController.forgetPassword);
+accountsRouter.post('/verify-reset-otp', accountController.verifyResetOtp);
 accountsRouter.post("/reset-password", accountController.resetPassword);
 accountsRouter.post("/login", loginValidation, accountController.loginAccount);
 accountsRouter.put("/change-password", authToken, accountController.changePassword);
