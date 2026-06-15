@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import {
     CheckCircleOutlined,
     ClockCircleOutlined,
+    PlusOutlined,
     PlayCircleOutlined,
     ReloadOutlined,
     TrophyOutlined
@@ -78,6 +79,9 @@ const StudentDashboard = () => {
                     <p>Join available tests, track recent attempts, and keep your focus on the next score.</p>
                 </div>
                 <div className="hero-actions">
+                    <Link className="btn btn-primary" to="/questions/new">
+                        <PlusOutlined /> Submit Question
+                    </Link>
                     <button className="btn btn-secondary" type="button" onClick={refreshDashboard} disabled={isLoading || attemptsLoading}>
                         <ReloadOutlined /> Refresh
                     </button>

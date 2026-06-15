@@ -458,6 +458,11 @@ label {
   color: var(--primary-dark);
 }
 
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: #fff;
+}
+
 [data-theme='dark'] .btn-secondary {
   background: linear-gradient(135deg, rgba(159, 103, 255, 0.34), rgba(124, 58, 237, 0.2));
   color: #ffffff;
@@ -531,6 +536,115 @@ label {
 
 .student-attempt-row {
   grid-template-columns: 100px minmax(0, 1fr) 64px;
+}
+
+.queue-actions,
+.review-list,
+.grading-detail,
+.grading-list,
+.manual-answer-card {
+  display: grid;
+  gap: 14px;
+}
+
+.queue-link {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  color: var(--text);
+  background: var(--surface-soft);
+}
+
+.queue-link > .anticon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  color: #fff;
+  background: var(--primary-gradient);
+}
+
+.queue-link strong,
+.queue-link span {
+  display: block;
+}
+
+.queue-link strong {
+  font-size: 26px;
+}
+
+.review-card h2,
+.grading-detail h2,
+.manual-answer-card h3 {
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.review-options {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.grading-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.35fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.submission-row {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.submission-row.active {
+  border-color: var(--primary);
+  background: var(--surface-soft);
+}
+
+.submission-row span,
+.submission-row small {
+  color: var(--muted);
+}
+
+.manual-answer-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--surface-soft);
+}
+
+.student-answer-box {
+  border-left: 4px solid var(--primary);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--surface);
+}
+
+.student-answer-box span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.student-answer-box p {
+  margin: 6px 0 0;
+  color: var(--text);
 }
 
 .admin-tabs {
@@ -934,6 +1048,7 @@ label {
   .workspace-grid,
   .workspace-grid.two,
   .student-grid,
+  .grading-layout,
   .test-execution-grid,
   .auth-card {
     grid-template-columns: 1fr;

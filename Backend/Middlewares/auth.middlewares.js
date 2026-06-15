@@ -146,6 +146,8 @@ export const checkTeacher = async (req, res, next) => {
         if(!req.account) return res.status(401).json({ message: 'Access denied!' })
 
         if(req.account.role !== 'teacher' && req.account.role !== 'admin') return res.status(403).json({ message: 'Only teachers and administrators can access this feature!' })
+
+        next()
     } catch (error) {
         return res.status(500).json({
             message: "Internal server error.",

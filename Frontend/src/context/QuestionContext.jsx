@@ -179,12 +179,13 @@ export const QuestionProvider = ({ children }) => {
         }
     }
 
-    const reviewQuestion = async (questionId, approved) => {
+    const reviewQuestion = async (questionId, reviewData) => {
         setIsLoading(true);
         setError(null);
 
         try {
-            const res = await instance.put(`/api/questions/review/${questionId}`, { approved });
+            const payload = typeof reviewData === 'boolean' ? { approved: reviewData } : reviewData;
+            const res = await instance.put(`/api/questions/review/${questionId}`, payload);
             const updatedQuestions = questions.map(q => q._id === questionId ? res.data.data : q);
             setQuestions(updatedQuestions);
             setQuestion(res.data.data);

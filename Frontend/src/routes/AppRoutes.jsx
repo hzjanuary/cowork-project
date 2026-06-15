@@ -15,6 +15,8 @@ import CreateTest from '../pages/TestPage/CreateTest.jsx';
 import DoTest from '../pages/TestPage/DoTest.jsx';
 import AdminDashboard from '../pages/Admin/AdminDashboard.jsx';
 import StudentDashboard from '../pages/Student/StudentDashboard.jsx';
+import TeacherQuestionReview from '../pages/Teacher/TeacherQuestionReview.jsx';
+import TeacherGrading from '../pages/Teacher/TeacherGrading.jsx';
 import ProtectedRoutes from './ProtectedRoutes.jsx';
 import { getRoleHomePath } from './roleRoutes.js';
 import { useAuth } from '../hooks/useAuth.js';
@@ -48,7 +50,9 @@ const AppRoutes = () => {
                     <Route path="/student/dashboard" element={<Navigate to="/student" replace />} />
                     <Route path="/profile" element={<ProtectedRoutes><Profile /></ProtectedRoutes>} />
                     <Route path="/questions" element={<ProtectedRoutes roles={['teacher']}><QuestionList /></ProtectedRoutes>} />
-                    <Route path="/questions/new" element={<ProtectedRoutes roles={['teacher']}><CreateQuestion /></ProtectedRoutes>} />
+                    <Route path="/questions/new" element={<ProtectedRoutes roles={['teacher', 'student', 'user']}><CreateQuestion /></ProtectedRoutes>} />
+                    <Route path="/teacher/review" element={<ProtectedRoutes roles={['teacher']}><TeacherQuestionReview /></ProtectedRoutes>} />
+                    <Route path="/teacher/grading" element={<ProtectedRoutes roles={['teacher']}><TeacherGrading /></ProtectedRoutes>} />
                     <Route path="/tests" element={<ProtectedRoutes><TestList /></ProtectedRoutes>} />
                     <Route path="/tests/new" element={<ProtectedRoutes roles={['teacher']}><CreateTest /></ProtectedRoutes>} />
                     <Route path="/tests/:id/do" element={<ProtectedRoutes roles={['student', 'user']}><DoTest /></ProtectedRoutes>} />

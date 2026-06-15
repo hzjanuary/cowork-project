@@ -1,22 +1,27 @@
-# PHASE 2: TEST CREATION & EXECUTION WORKFLOWS
+# PHASE 3: ADVANCED ROLE CAPABILITIES & GRADING WORKFLOW
 
-## 1. Teacher Workflow: Enhanced Test Creation
-* **Current State:** The `CreateTest.jsx` UI only captures `title` and `timeLimit`.
-* **New Requirement:** Teachers must be able to select existing questions from their Question Bank to add to the Test.
-* **Implementation Details:**
-    * **UI:** Add a "Question Selector" component within `CreateTest.jsx`. This should display a list of the Teacher's created questions (fetching from `/questions` endpoint) with checkboxes or an "Add" button.
-    * **Data Structure:** The selected question IDs must be stored in an array (e.g., `questions: [questionId1, questionId2]`) and sent in the payload when submitting the new Test to the backend.
-    * **Backend:** Ensure the backend `tests.controllers.js` and `tests.models.js` correctly accept, validate, and save the array of ObjectIds referencing the `questions` collection.
+## 1. Context & Safety Rules for AI Agent
+* **CRITICAL:** The codebase has been updated in previous sessions (specifically `CreateTest.jsx` and `DoTest.jsx`). The AI MUST scan and read the latest codebase (Frontend pages and Backend controllers/models) to sync context before making any changes.
+* **Rule:** DO NOT delete, refactor, or overwrite existing functional code unless specifically instructed to do so to fulfill the new requirements.
 
-## 2. Student Workflow: Test Execution & Timer
-* **Current State:** Students need a dedicated UI to actually take the test once they click "Start Test".
-* **New Requirement:** Implement the functional test-taking interface in `DoTest.jsx`.
-* **Implementation Details:**
-    * **Data Fetching:** When entering `/test/:id/do`, fetch the test details AND populate the associated questions.
-    * **UI Layout:** Display questions one by one or in a scrollable list. Provide radio buttons/checkboxes for answer selection.
-    * **Countdown Timer:** * Implement a real-time countdown timer based on the test's `timeLimit`.
-        * Display the timer prominently (e.g., fixed at the top of the screen).
-    * **Warning System:** Trigger a visual notification (toast/alert) exactly **5 minutes** before the timer reaches 00:00 (e.g., "Warning: 5 minutes remaining. Please review your answers!").
-    * **Submission:** * Allow manual submission via a "Submit Test" button.
-        * Implement auto-submission when the timer hits 00:00.
-        * Save the results via the `testAttempts` endpoint.
+## 2. Updated Role Capabilities
+
+### Role: Teacher (Enhancements)
+* **Test Management:** Continue to create tests (already implemented).
+* **Question Management:** * Can review, edit, and provide answers to questions (including those submitted by students).
+* **Grading System (New):**
+    * **Manual Grading Workflow:** If a test contains open-ended questions or questions without predefined exact answers, the Teacher needs a UI to view student submissions (`testAttempts`) and manually assign scores.
+    * **Dashboard Update:** Add a "Pending Grading" or "Submissions" section in the Teacher Dashboard to track tests that require manual review.
+
+### Role: Student (Enhancements)
+* **Test Execution:** Take tests and submit answers (already implemented with timer).
+* **Question Management (New):**
+    * **Propose/Create Questions:** Students can now create questions (e.g., submitting a question to the system/teacher).
+    * **Answer Standalone Questions:** Students can answer standalone questions outside of a formal test environment (if applicable).
+    * **Data Isolation:** When a student creates a question, it should be tagged with their `userId` and perhaps a status like `pending_teacher_review` or similar, ensuring they don't mess up the official Teacher question bank without approval.
+
+## 3. Implementation Steps for Agent
+1.  **Codebase Sync:** Analyze current `questions.models.js`, `tests.models.js`, `testAttempts.models.js` and their corresponding controllers/routes. Analyze `Question.jsx`, `CreateQuestion.jsx`, and `DoTest.jsx`.
+2.  **Database/Backend Adjustments:** Update schemas if necessary to support manual grading (e.g., `isGraded` flag in `testAttempts`) and student-created questions (e.g., `authorRole` or `status` in `questions`).
+3.  **Student Question Workflow:** Enable the `CreateQuestion` feature for students, routing their created questions appropriately.
+4.  **Teacher Grading Workflow:** Create a UI for teachers to view `testAttempts` of their students, review the answers, and input a score for questions that require manual grading.
