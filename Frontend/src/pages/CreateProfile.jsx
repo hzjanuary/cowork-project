@@ -9,7 +9,8 @@ const CreateProfile = () => {
     const [formData, setFormData] = useState({
         fullName: '',
         phoneNumber: '',
-        dateOfBirth: ''
+        dateOfBirth: '',
+        gender: ''
     });
     const [avatar, setAvatar] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
@@ -54,7 +55,7 @@ const CreateProfile = () => {
         console.log('📋 [handleSubmit] Form data:', formData);
         console.log('📋 [handleSubmit] Avatar selected:', avatar ? 'Yes' : 'No');
 
-        if (!formData.fullName.trim() || !formData.phoneNumber.trim() || !formData.dateOfBirth) {
+        if (!formData.fullName.trim() || !formData.phoneNumber.trim() || !formData.dateOfBirth || !formData.gender) {
             console.warn('⚠️  [handleSubmit] Validation failed: Missing required fields');
             toast.error('Please fill in all fields');
             return;
@@ -66,7 +67,8 @@ const CreateProfile = () => {
             const userData = {
                 fullName: formData.fullName,
                 phoneNumber: formData.phoneNumber,
-                dateOfBirth: formData.dateOfBirth
+                dateOfBirth: formData.dateOfBirth,
+                gender: formData.gender
             };
 
             const response = await createUser(userData);
@@ -159,6 +161,22 @@ const CreateProfile = () => {
                             onChange={handleChange}
                             disabled={isLoading}
                         />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="gender">Gender</label>
+                        <select
+                            id="gender"
+                            name="gender"
+                            value={formData.gender}
+                            onChange={handleChange}
+                            disabled={isLoading}
+                        >
+                            <option value="">Select gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
 
                     <div className="form-actions">

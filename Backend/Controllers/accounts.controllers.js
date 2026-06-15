@@ -56,6 +56,18 @@ const accountsController = {
             res.status(400).json({ message: error.message })
         }
     },
+    verifyResetOtp: async (req, res) => {
+        try {
+            const { email, pin } = req.body
+            if (!email || !pin) return res.status(400).json({ message: 'Email and pin are required!' })
+            const normalizedEmail = email.toLowerCase()
+            const result = await verifyResetPasswordOtp(normalizedEmail, pin)
+
+            res.json(result)
+        } catch (error) {
+            res.status(400).json({ message: error.message })
+        }
+    },
     forgetPassword: async (req, res) => {
         const { email } = req.body
         if (!email) return res.status(400).json({ message: 'Please type in your email!' })

@@ -50,6 +50,9 @@ const Login = () => {
                         autoComplete="current-password"
                     />
                 </label>
+                <p className="auth-inline-link">
+                    <Link to="/forgot-password">Forgot Password?</Link>
+                </p>
                 <button className="btn btn-primary" disabled={isLoading} type="submit">
                     <LoginOutlined /> {isLoading ? 'Logging in...' : 'Login'}
                 </button>

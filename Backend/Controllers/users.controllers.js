@@ -2,6 +2,14 @@ import userModel from "../Models/users.models.js";
 import accountsModel from "../Models/accounts.models.js";
 import bcrypt from 'bcrypt';
 
+const normalizeGender = (gender) => {
+    const normalized = String(gender || '').toLowerCase();
+    if (normalized === 'male') return 'Male';
+    if (normalized === 'female') return 'Female';
+    if (normalized === 'other') return 'Other';
+    return '';
+};
+
 const userControllers = {
     createUser: async (req, res) => {
         const accountId = req.account._id
@@ -41,6 +49,7 @@ const userControllers = {
                 fullName,
                 phoneNumber,
                 dateOfBirth,
+                gender: normalizeGender(gender),
                 age,
                 avatar
             })
@@ -90,8 +99,8 @@ const userControllers = {
                 updateData.dateOfBirth = dateOfBirth
                 updateData.age = new Date().getFullYear() - new Date(dateOfBirth).getFullYear()
             }
-            if (gender) {
-                updateData.gender = gender
+            if (gender !== undefined) {
+                updateData.gender = normalizeGender(gender)
             }
             if (req.file?.path) {
                 updateData.avatar = req.file.path // Update avatar if file uploaded

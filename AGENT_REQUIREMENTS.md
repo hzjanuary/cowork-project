@@ -1,27 +1,39 @@
-# PHASE 3: ADVANCED ROLE CAPABILITIES & GRADING WORKFLOW
+# PHASE 4: STUDENT PRACTICE MODE (DUOLINGO-STYLE), FORGOT PASSWORD UI INTEGRATION, AND PROFILE GENDER UPDATE
 
-## 1. Context & Safety Rules for AI Agent
-* **CRITICAL:** The codebase has been updated in previous sessions (specifically `CreateTest.jsx` and `DoTest.jsx`). The AI MUST scan and read the latest codebase (Frontend pages and Backend controllers/models) to sync context before making any changes.
-* **Rule:** DO NOT delete, refactor, or overwrite existing functional code unless specifically instructed to do so to fulfill the new requirements.
+## 1. Safety & Context Alignment Rules
+* **CRITICAL:** Do NOT modify, delete, or break any existing features from previous phases (Admin dashboard, Teacher exam creation with question selection, Teacher grading workspace, Student test-taking with countdown timer).
+* **Rule:** Read the entire codebase first (`Frontend/src/pages/`, `Backend/Models/`, `Backend/Controllers/`) before writing code to maintain deep architecture compatibility.
 
-## 2. Updated Role Capabilities
+## 2. Detailed Feature Requirements
 
-### Role: Teacher (Enhancements)
-* **Test Management:** Continue to create tests (already implemented).
-* **Question Management:** * Can review, edit, and provide answers to questions (including those submitted by students).
-* **Grading System (New):**
-    * **Manual Grading Workflow:** If a test contains open-ended questions or questions without predefined exact answers, the Teacher needs a UI to view student submissions (`testAttempts`) and manually assign scores.
-    * **Dashboard Update:** Add a "Pending Grading" or "Submissions" section in the Teacher Dashboard to track tests that require manual review.
+### Feature 1: Student Continuous Practice Mode (Duolingo-style)
+* **Goal:** Allow students to browse the public/approved question bank, sort by difficulty, and practice infinitely in a continuous flow.
+* **UI Implementation (`StudentDashboard.jsx` or separate tab):**
+    * Add a new Tab or Table section named **"Question Bank Practice"**.
+    * Fetch all approved public questions from the backend.
+    * Implement a sorting/filter dropdown based on question level/difficulty (`easy`, `medium`, `hard`).
+* **Interactive Quiz Flow:**
+    * When a student clicks on any question in the list, it initiates a **"Practice Session"** starting from that question.
+    * Display the question with its options. Once the student selects an answer and clicks **"Continue" (Tiếp tục)**:
+        * Provide immediate subtle visual feedback (green for correct, red for incorrect if applicable, or simply transition).
+        * Instantly load the next question in the sorted list.
+        * This continuous cycle repeats seamlessly until all questions in the active queue are completed.
+    * *Note:* Unlike formal tests (`DoTest.jsx`), this practice mode has NO time limit countdown and does not record strict `testAttempts` unless storing basic practice metrics is required.
 
-### Role: Student (Enhancements)
-* **Test Execution:** Take tests and submit answers (already implemented with timer).
-* **Question Management (New):**
-    * **Propose/Create Questions:** Students can now create questions (e.g., submitting a question to the system/teacher).
-    * **Answer Standalone Questions:** Students can answer standalone questions outside of a formal test environment (if applicable).
-    * **Data Isolation:** When a student creates a question, it should be tagged with their `userId` and perhaps a status like `pending_teacher_review` or similar, ensuring they don't mess up the official Teacher question bank without approval.
+### Feature 2: Forgot Password Flow Integration
+* **Current State:** The backend already contains helper utilities and routes for OTP/Reset Password (`PIN.js`, `resetPassword.js`, `otp.models.js`). The frontend pages (`ForgotPassword.jsx`, `OTPVerify.jsx`, `ResetPassword.jsx`) exist but are disconnected from the main login screen.
+* **Requirements:**
+    * **Login Page Link:** Open `Frontend/src/pages/Authentication/Login.jsx` and add a **"Forgot Password?"** clickable link below the password input field, routing users to `/forgot-password`.
+    * **Wiring UI Pages:** Ensure the complete visual flow is fully wired up via `AppRoutes.jsx`:
+        1. `/forgot-password` (`ForgotPassword.jsx`) -> Input email -> Request OTP from backend.
+        2. `/verify-otp` (`OTPVerify.jsx`) -> Input OTP received -> Verify with backend.
+        3. `/reset-password` (`ResetPassword.jsx`) -> Input new password -> Submit to reset.
+    * Ensure error/success toasts are gracefully handled during the entire transaction.
 
-## 3. Implementation Steps for Agent
-1.  **Codebase Sync:** Analyze current `questions.models.js`, `tests.models.js`, `testAttempts.models.js` and their corresponding controllers/routes. Analyze `Question.jsx`, `CreateQuestion.jsx`, and `DoTest.jsx`.
-2.  **Database/Backend Adjustments:** Update schemas if necessary to support manual grading (e.g., `isGraded` flag in `testAttempts`) and student-created questions (e.g., `authorRole` or `status` in `questions`).
-3.  **Student Question Workflow:** Enable the `CreateQuestion` feature for students, routing their created questions appropriately.
-4.  **Teacher Grading Workflow:** Create a UI for teachers to view `testAttempts` of their students, review the answers, and input a score for questions that require manual grading.
+### Feature 3: User Profile Gender Update
+* **Backend Adjustments:**
+    * **Model:** Update `Backend/Models/users.models.js` to include a `gender` field (Type: String, Enum: `['Male', 'Female', 'Other']` or optional text, default: `''`).
+    * **Controller:** Ensure `users.controllers.js` allows the `gender` field to be accepted and updated inside the profile modification endpoint.
+* **Frontend Adjustments:**
+    * **Profile Page (`Profile.jsx` / `CreateProfile.jsx`):** Add a form input field (Dropdown `<select>` or Radio Buttons) for **Gender** (Nam / Nữ / Khác hoặc Male / Female / Other) matching the application's overall design system.
+    * Ensure the profile update payload includes the selected gender value and correctly syncs upon clicking save.
