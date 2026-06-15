@@ -6,6 +6,8 @@ const questionControllers = {
         try {
             const { sourceFile, testId, questionText, type, options, answer, difficulty } = req.body;
             const userId = req.account._id; // Extract from authenticated user
+            const authorRole = req.account?.role === 'user' ? 'student' : req.account?.role;
+            const isTeacherCreated = ['teacher', 'admin'].includes(req.account?.role);
 
             // Validate required fields
             if (!questionText || !type) {
@@ -45,8 +47,10 @@ const questionControllers = {
                 options: options || [],
                 answer,
                 difficulty: difficulty || "easy",
-                status: "draft",
-                verified: false
+                authorRole,
+                status: isTeacherCreated ? "draft" : "pending_teacher_review",
+                verified: false,
+                isApproved: false
             });
 
             // Save to database
@@ -325,7 +329,7 @@ const questionControllers = {
     },
     reviewQuestion: async (req, res) => {
         const { id } = req.params;
-        const { approved } = req.body;
+        const { approved, answer, options, difficulty, reviewNotes } = req.body;
 
         if (!id) {
             return res.status(400).json({
@@ -346,8 +350,15 @@ const questionControllers = {
             const updatedQuestion = await questionModel.findByIdAndUpdate(
                 id,
                 { 
-                    status: approved ? 'verified' : 'draft',
-                    verified: approved
+                    ...(answer !== undefined ? { answer } : {}),
+                    ...(options !== undefined ? { options } : {}),
+                    ...(difficulty !== undefined ? { difficulty } : {}),
+                    status: approved ? 'verified' : 'rejected',
+                    verified: approved,
+                    isApproved: approved,
+                    reviewedBy: req.account._id,
+                    reviewedAt: new Date(),
+                    reviewNotes
                 },
                 { new: true }
             );

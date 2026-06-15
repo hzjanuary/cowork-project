@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import {useQuestion} from '../../hooks/useQuestion.js';
+import { useAuth } from '../../hooks/useAuth.js';
 
 const defaultOptions = [
     { label: 'A', text: '', isCorrect: false },
@@ -14,6 +15,8 @@ const defaultOptions = [
 const CreateQuestion = () => {
     const navigate = useNavigate();
     const { createQuestion, isLoading } = useQuestion();
+    const { account } = useAuth();
+    const isStudent = account?.role === 'student' || account?.role === 'user';
     const [form, setForm] = useState({
         questionText: '',
         type: 'multiple_choice',
@@ -49,15 +52,15 @@ const CreateQuestion = () => {
             answer: form.answer,
             difficulty: form.difficulty,
             options: form.type === 'multiple_choice' ? options.filter((option) => option.text.trim()) : [],
-            testId: form.testId || undefined
+            testId: isStudent ? undefined : form.testId || undefined
         };
 
         try {
             await createQuestion(payload);
-            toast.success('Question created.');
-            navigate('/questions');
+            toast.success(isStudent ? 'Question submitted for review!' : 'Question created.');
+            navigate(isStudent ? '/student' : '/questions');
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Question could not be created.');
+            toast.error(error.response?.data?.message || (isStudent ? 'Question could not be submitted for review.' : 'Question could not be created.'));
         }
     };
 
@@ -65,8 +68,8 @@ const CreateQuestion = () => {
         <div className="page-stack">
             <section className="page-heading">
                 <div>
-                    <span className="eyebrow">New question</span>
-                    <h1>Create a reusable exercise</h1>
+                    <span className="eyebrow">{isStudent ? 'Question proposal' : 'New question'}</span>
+                    <h1>{isStudent ? 'Submit a question for teacher review' : 'Create a reusable exercise'}</h1>
                 </div>
             </section>
 
@@ -98,14 +101,16 @@ const CreateQuestion = () => {
                             <option value="hard">Hard</option>
                         </select>
                     </label>
-                    <label>
-                        Test ID
-                        <input
-                            value={form.testId}
-                            onChange={(event) => updateField('testId', event.target.value)}
-                            placeholder="Optional"
-                        />
-                    </label>
+                    {!isStudent && (
+                        <label>
+                            Test ID
+                            <input
+                                value={form.testId}
+                                onChange={(event) => updateField('testId', event.target.value)}
+                                placeholder="Optional"
+                            />
+                        </label>
+                    )}
                 </div>
 
                 {form.type === 'multiple_choice' && (
@@ -152,7 +157,7 @@ const CreateQuestion = () => {
 
                 <div className="action-row">
                     <button className="btn btn-primary" type="submit" disabled={isLoading}>
-                        <SaveOutlined /> {isLoading ? 'Saving...' : 'Save question'}
+                        <SaveOutlined /> {isLoading ? 'Saving...' : (isStudent ? 'Submit for Teacher Review' : 'Save question')}
                     </button>
                 </div>
             </form>

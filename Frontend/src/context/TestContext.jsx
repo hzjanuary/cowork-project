@@ -122,6 +122,39 @@ export const TestProvider = ({ children }) => {
         }
     }
 
+    const getPendingGradingAttempts = async () => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const res = await instance.get('/api/tests/test-attempts/pending-grading');
+            return res.data.data || [];
+        } catch (err) {
+            setError(err.response?.data?.message || err.message);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    const manualGradeAttempt = async (testAttemptId, { grades, teacherFeedback }) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const res = await instance.put(`/api/tests/test-attempts/${testAttemptId}/grade`, {
+                grades,
+                teacherFeedback
+            });
+            return res.data;
+        } catch (err) {
+            setError(err.response?.data?.message || err.message);
+            throw err;
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
     const updateTest = async (testId, { title, timeLimit, visibility, questions }) => {
         setIsLoading(true);
         setError(null);
@@ -173,7 +206,9 @@ export const TestProvider = ({ children }) => {
             startTest,
             submitTest,
             getTestResults,
-            getMyTestAttempts
+            getMyTestAttempts,
+            getPendingGradingAttempts,
+            manualGradeAttempt
         }}>
             {children}
         </TestContext.Provider>

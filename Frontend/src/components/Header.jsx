@@ -7,6 +7,7 @@ import {
     LogoutOutlined,
     QuestionCircleOutlined,
     ReadOutlined,
+    SolutionOutlined,
     UserOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth.js';
@@ -53,6 +54,8 @@ const Header = () => {
                     <NavLink to={getRoleHomePath(account?.role)} end><HomeOutlined /> Home</NavLink>
                     {role === 'teacher' && <NavLink to="/tests"><ReadOutlined /> Tests</NavLink>}
                     {role === 'teacher' && <NavLink to="/questions"><FileSearchOutlined /> Questions</NavLink>}
+                    {role === 'teacher' && <NavLink to="/teacher/review"><SolutionOutlined /> Review</NavLink>}
+                    {role === 'teacher' && <NavLink to="/teacher/grading"><ReadOutlined /> Grading</NavLink>}
                     <NavLink to="/faq"><QuestionCircleOutlined /> FAQ</NavLink>
                 </nav>
             )}

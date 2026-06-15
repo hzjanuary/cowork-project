@@ -1,11 +1,33 @@
 import testModel from '../Models/tests.models.js';
 import testAttemptModel from '../Models/testAttempts.models.js';
 import questionModel from '../Models/questions.models.js';
+import userModel from '../Models/users.models.js';
 import mongoose from 'mongoose';
 
 const hasInvalidQuestionIds = (questions) => (
     questions.some((questionId) => !mongoose.Types.ObjectId.isValid(questionId))
 );
+
+const recalculateAttemptScore = (testAttempt) => {
+    testAttempt.totalAutoScore = testAttempt.answers.reduce((sum, answer) => (
+        answer.needsManualGrading ? sum : sum + (answer.points || 0)
+    ), 0);
+    testAttempt.teacherScore = testAttempt.answers.reduce((sum, answer) => (
+        answer.manualScore === null || answer.manualScore === undefined ? sum : sum + answer.manualScore
+    ), 0);
+    testAttempt.totalScore = testAttempt.answers.reduce((sum, answer) => sum + (answer.points || 0), 0);
+    testAttempt.totalPoints = testAttempt.answers.reduce((sum, answer) => sum + (answer.maxPoints || 1), 0);
+    testAttempt.percentage = testAttempt.totalPoints ? (testAttempt.totalScore / testAttempt.totalPoints) * 100 : 0;
+};
+
+const getTeacherOwnedTestIds = async (account) => {
+    if (account?.role === 'admin') return null;
+
+    const teacherProfile = await userModel.findOne({ accountId: account._id });
+    if (!teacherProfile) return [];
+
+    return testModel.find({ userId: teacherProfile._id }).distinct('_id');
+};
 
 const testController = {
     createTest: async (req, res) => {
@@ -39,6 +61,20 @@ const testController = {
                 return res.status(400).json({
                     success: false,
                     message: "One or more selected questions do not exist"
+                });
+            }
+
+            const blockedQuestionCount = questions.length
+                ? await questionModel.countDocuments({
+                    _id: { $in: questions },
+                    status: { $in: ["pending_teacher_review", "rejected"] }
+                })
+                : 0;
+
+            if (blockedQuestionCount) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Selected questions must be teacher-approved before they can be used in a test"
                 });
             }
 
@@ -190,6 +226,20 @@ const testController = {
                         message: "One or more selected questions do not exist"
                     });
                 }
+
+                const blockedQuestionCount = questions.length
+                    ? await questionModel.countDocuments({
+                        _id: { $in: questions },
+                        status: { $in: ["pending_teacher_review", "rejected"] }
+                    })
+                    : 0;
+
+                if (blockedQuestionCount) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Selected questions must be teacher-approved before they can be used in a test"
+                    });
+                }
             }
 
             const updatedTest = await testModel.findByIdAndUpdate(
@@ -312,9 +362,10 @@ const testController = {
             testAttempt.submittedAt = new Date();
             testAttempt.status = "submitted";
 
-            // Auto-grade objective questions
+            // Auto-grade objective questions and flag open-ended questions for manual grading.
             for (let ans of testAttempt.answers) {
                 const question = await questionModel.findById(ans.questionId);
+                ans.maxPoints = ans.maxPoints || 1;
 
                 if (question.type === "multiple_choice") {
                     const correctOption = question.options?.find(option => option.isCorrect);
@@ -322,19 +373,28 @@ const testController = {
                         || ans.studentAnswer === correctOption?.label
                         || ans.studentAnswer === correctOption?.text;
                     ans.points = ans.isCorrect ? 1 : 0;
+                    ans.needsManualGrading = false;
                 } else if (question.type === "true_false") {
                     ans.isCorrect = String(ans.studentAnswer).toLowerCase() === String(question.answer).toLowerCase();
                     ans.points = ans.isCorrect ? 1 : 0;
+                    ans.needsManualGrading = false;
                 } else if (question.type === "short_answer") {
-                    ans.isCorrect = String(ans.studentAnswer || '').trim().toLowerCase() === String(question.answer || '').trim().toLowerCase();
-                    ans.points = ans.isCorrect ? 1 : 0;
+                    if (String(question.answer || '').trim()) {
+                        ans.isCorrect = String(ans.studentAnswer || '').trim().toLowerCase() === String(question.answer || '').trim().toLowerCase();
+                        ans.points = ans.isCorrect ? 1 : 0;
+                        ans.needsManualGrading = false;
+                    } else {
+                        ans.isCorrect = undefined;
+                        ans.points = 0;
+                        ans.needsManualGrading = true;
+                    }
                 }
             }
 
-            testAttempt.totalScore = testAttempt.answers.reduce((sum, a) => sum + (a.points || 0), 0);
-            testAttempt.totalPoints = testAttempt.answers.length;
-            testAttempt.percentage = (testAttempt.totalScore / testAttempt.totalPoints) * 100;
-            testAttempt.status = "graded";
+            testAttempt.needsManualGrading = testAttempt.answers.some(answer => answer.needsManualGrading);
+            testAttempt.manualGradingStatus = testAttempt.needsManualGrading ? "pending" : "not_required";
+            testAttempt.status = testAttempt.needsManualGrading ? "needs_manual_grading" : "graded";
+            recalculateAttemptScore(testAttempt);
 
             await testAttempt.save();
 
@@ -342,7 +402,9 @@ const testController = {
                 success: true,
                 message: "Test submitted successfully",
                 score: testAttempt.totalScore,
-                percentage: testAttempt.percentage.toFixed(2)
+                percentage: testAttempt.percentage.toFixed(2),
+                needsManualGrading: testAttempt.needsManualGrading,
+                manualGradingStatus: testAttempt.manualGradingStatus
             });
         } catch (error) {
             return res.status(500).json({ error: error.message });
@@ -362,6 +424,108 @@ const testController = {
             });
         } catch (error) {
             return res.status(500).json({ error: error.message });
+        }
+    },
+    getPendingGradingAttempts: async (req, res) => {
+        try {
+            const teacherTestIds = await getTeacherOwnedTestIds(req.account);
+            const ownershipFilter = teacherTestIds ? { testId: { $in: teacherTestIds } } : {};
+            const attempts = await testAttemptModel
+                .find({
+                    ...ownershipFilter,
+                    $or: [
+                        { needsManualGrading: true },
+                        { status: "needs_manual_grading" },
+                        { manualGradingStatus: "pending" }
+                    ]
+                })
+                .populate('testId', 'title timeLimit visibility userId')
+                .populate('studentId', 'username email role')
+                .populate('answers.questionId')
+                .sort({ submittedAt: 1, updatedAt: 1 });
+
+            return res.status(200).json({
+                success: true,
+                data: attempts
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: 'Error fetching pending grading attempts',
+                error: error.message
+            });
+        }
+    },
+    manualGradeAttempt: async (req, res) => {
+        try {
+            const { testAttemptId } = req.params;
+            const { grades = [], teacherFeedback } = req.body;
+
+            if (!Array.isArray(grades)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "grades must be an array"
+                });
+            }
+
+            const testAttempt = await testAttemptModel.findById(testAttemptId);
+
+            if (!testAttempt) {
+                return res.status(404).json({
+                    success: false,
+                    message: "Test attempt not found"
+                });
+            }
+
+            const teacherTestIds = await getTeacherOwnedTestIds(req.account);
+            if (teacherTestIds && !teacherTestIds.some((testId) => testId.toString() === testAttempt.testId.toString())) {
+                return res.status(403).json({
+                    success: false,
+                    message: "You can only grade attempts for your own tests"
+                });
+            }
+
+            grades.forEach((grade) => {
+                const attemptAnswer = testAttempt.answers.find((answer) => (
+                    answer.questionId?.toString() === grade.questionId
+                ));
+
+                if (!attemptAnswer) return;
+
+                const maxPoints = Number(grade.maxPoints ?? attemptAnswer.maxPoints ?? 1);
+                const manualScore = Math.max(0, Math.min(Number(grade.points ?? grade.manualScore ?? 0), maxPoints));
+
+                attemptAnswer.maxPoints = maxPoints;
+                attemptAnswer.points = manualScore;
+                attemptAnswer.manualScore = manualScore;
+                attemptAnswer.isCorrect = manualScore > 0;
+                attemptAnswer.needsManualGrading = false;
+                attemptAnswer.teacherFeedback = grade.teacherFeedback;
+                attemptAnswer.gradedBy = req.account._id;
+                attemptAnswer.gradedAt = new Date();
+            });
+
+            testAttempt.needsManualGrading = testAttempt.answers.some(answer => answer.needsManualGrading);
+            testAttempt.manualGradingStatus = testAttempt.needsManualGrading ? "pending" : "graded";
+            testAttempt.status = testAttempt.needsManualGrading ? "needs_manual_grading" : "graded";
+            testAttempt.teacherFeedback = teacherFeedback;
+            testAttempt.gradedBy = req.account._id;
+            testAttempt.gradedAt = new Date();
+            recalculateAttemptScore(testAttempt);
+
+            await testAttempt.save();
+
+            return res.status(200).json({
+                success: true,
+                message: "Test attempt graded successfully",
+                data: testAttempt
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: 'Error grading test attempt',
+                error: error.message
+            });
         }
     },
     getMyTestAttempts: async (req, res) => {

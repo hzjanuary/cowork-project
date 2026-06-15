@@ -7,7 +7,8 @@ import {
     FileTextOutlined,
     PlusOutlined,
     ReadOutlined,
-    SafetyCertificateOutlined
+    SafetyCertificateOutlined,
+    SolutionOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../hooks/useAuth.js';
 import {useQuestion} from '../hooks/useQuestion.js';
@@ -17,27 +18,34 @@ import instance from '../config/axiosConfig.js';
 const Home = () => {
     const { account, isAuthenticated } = useAuth();
     const { questions, getQuestionBankForAccount } = useQuestion();
-    const { tests, getAllTests } = useTest();
+    const { tests, getAllTests, getPendingGradingAttempts } = useTest();
     const [file, setFile] = useState(null);
     const [uploading, setUploading] = useState(false);
+    const [pendingAttempts, setPendingAttempts] = useState([]);
 
     useEffect(() => {
         if (!isAuthenticated) return;
         getQuestionBankForAccount(account).catch(() => {});
         getAllTests().catch(() => {});
+        if (account?.role === 'teacher') {
+            getPendingGradingAttempts()
+                .then((data) => setPendingAttempts(Array.isArray(data) ? data : []))
+                .catch(() => {});
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isAuthenticated, account?._id, account?.role]);
 
     const stats = useMemo(() => {
         const verified = questions.filter((item) => item.verified).length;
         const publicTests = tests.filter((item) => item.visibility === 'public').length;
+        const pendingReview = questions.filter((item) => item.status === 'pending_teacher_review').length;
         return [
             { label: 'Questions', value: questions.length, icon: <FileTextOutlined /> },
             { label: 'Tests', value: tests.length, icon: <ReadOutlined /> },
-            { label: 'Verified', value: verified, icon: <SafetyCertificateOutlined /> },
-            { label: 'Public tests', value: publicTests, icon: <CloudUploadOutlined /> }
+            { label: account?.role === 'teacher' ? 'Pending review' : 'Verified', value: account?.role === 'teacher' ? pendingReview : verified, icon: <SafetyCertificateOutlined /> },
+            { label: account?.role === 'teacher' ? 'Pending grading' : 'Public tests', value: account?.role === 'teacher' ? pendingAttempts.length : publicTests, icon: <CloudUploadOutlined /> }
         ];
-    }, [questions, tests]);
+    }, [account?.role, pendingAttempts.length, questions, tests]);
 
     const handleUpload = async (event) => {
         event.preventDefault();
@@ -114,6 +122,31 @@ const Home = () => {
             </section>
 
             <section className="workspace-grid">
+                {account?.role === 'teacher' && (
+                    <article className="panel">
+                        <div className="panel-heading">
+                            <h2>Review Queues</h2>
+                            <span>Phase 3</span>
+                        </div>
+                        <div className="queue-actions">
+                            <Link className="queue-link" to="/teacher/review">
+                                <SolutionOutlined />
+                                <span>
+                                    <strong>{questions.filter((item) => item.status === 'pending_teacher_review').length}</strong>
+                                    Question proposals
+                                </span>
+                            </Link>
+                            <Link className="queue-link" to="/teacher/grading">
+                                <ReadOutlined />
+                                <span>
+                                    <strong>{pendingAttempts.length}</strong>
+                                    Pending submissions
+                                </span>
+                            </Link>
+                        </div>
+                    </article>
+                )}
+
                 <article className="panel">
                     <div className="panel-heading">
                         <h2>OCR Upload</h2>
