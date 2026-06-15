@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-// import './ForgotPassword.css';
+import { MailOutlined } from '@ant-design/icons';
+import { useAuth } from '../../hooks/useAuth.js';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -10,57 +10,60 @@ const ForgotPassword = () => {
     const { forgotPassword } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        const normalizedEmail = email.trim().toLowerCase();
 
-        if (!email.trim()) {
-            toast.error('Please enter your email');
+        if (!normalizedEmail) {
+            toast.error('Please enter your email.');
             return;
         }
 
         try {
             setIsLoading(true);
-            await forgotPassword(email);
-            toast.success('Password reset OTP sent to your email!');
-            // Store email for reset password page
-            localStorage.setItem('resetEmail', email);
-            navigate('/reset-password');
+            await forgotPassword(normalizedEmail);
+            localStorage.setItem('resetEmail', normalizedEmail);
+            toast.success('Password reset OTP sent to your email.');
+            navigate('/verify-otp', {
+                state: {
+                    email: normalizedEmail,
+                    mode: 'reset'
+                }
+            });
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to send reset email');
+            toast.error(error.response?.data?.message || 'Failed to send reset OTP.');
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="forgot-password-container">
-            <div className="forgot-password-card">
-                <h2>Forgot Password</h2>
-                <p>Enter your email address and we'll send you an OTP to reset your password.</p>
-
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="email">Email Address</label>
-                        <input
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter your email"
-                            disabled={isLoading}
-                        />
-                    </div>
-
-                    <button type="submit" disabled={isLoading}>
-                        {isLoading ? 'Sending...' : 'Send Reset OTP'}
-                    </button>
-                </form>
-
-                <div className="forgot-password-footer">
-                    <p>Remember your password? <a href="/login">Login here</a></p>
-                </div>
+        <section className="auth-card">
+            <div className="auth-art">
+                <span>鍵</span>
+                <h1>Reset access</h1>
+                <p>Request a one-time PIN, verify it, then choose a new password.</p>
             </div>
-        </div>
+            <form className="auth-form" onSubmit={handleSubmit}>
+                <span className="eyebrow">Forgot password</span>
+                <h2>Send reset OTP</h2>
+                <label>
+                    Email address
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        placeholder="you@example.com"
+                        disabled={isLoading}
+                        autoComplete="email"
+                    />
+                </label>
+                <button className="btn btn-primary" type="submit" disabled={isLoading}>
+                    <MailOutlined /> {isLoading ? 'Sending...' : 'Send Reset OTP'}
+                </button>
+                <p className="muted">Remember your password? <Link to="/login">Login here</Link></p>
+            </form>
+        </section>
     );
 };
 

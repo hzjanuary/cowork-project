@@ -9,15 +9,16 @@ export const UserProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const createUser = async ({ fullName, phoneNumber, dateOfBirth }) => {
-        console.log('📝 [createUser] Starting user creation with:', { fullName, phoneNumber, dateOfBirth });
+    const createUser = async ({ fullName, phoneNumber, dateOfBirth, gender }) => {
+        console.log('📝 [createUser] Starting user creation with:', { fullName, phoneNumber, dateOfBirth, gender });
         setIsLoading(true);
         setError(null);
         try {
             const res = await instance.post('/api/users', {
                 fullName,
                 phoneNumber,
-                dateOfBirth
+                dateOfBirth,
+                gender
             });
             console.log('✅ [createUser] Success! User created:', res.data);
             setUser(res.data.user);
@@ -75,16 +76,17 @@ export const UserProvider = ({ children }) => {
         }
     }
 
-    const updateUser = async (userId, { fullName, phoneNumber, dateOfBirth }) => {
+    const updateUser = async (userId, { fullName, phoneNumber, dateOfBirth, gender }) => {
         console.log('✏️  [updateUser] Starting user update for user:', userId);
-        console.log('✏️  [updateUser] Update data:', { fullName, phoneNumber, dateOfBirth });
+        console.log('✏️  [updateUser] Update data:', { fullName, phoneNumber, dateOfBirth, gender });
         setIsLoading(true);
         setError(null);
         try {
             const res = await instance.put(`/api/users/${userId}`, {
                 fullName,
                 phoneNumber,
-                dateOfBirth
+                dateOfBirth,
+                gender
             });
             console.log('✅ [updateUser] Success! User updated:', res.data);
             setUser(res.data.user);

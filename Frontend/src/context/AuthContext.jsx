@@ -110,6 +110,11 @@ export const AuthProvider = ({ children }) => {
         return res.data;
     }
 
+    const verifyResetOtp = async (email, pin) => {
+        const res = await instance.post('/api/accounts/verify-reset-otp', { email, pin });
+        return res.data;
+    }
+
     const resetPassword = async (email, password, confirmPassword) => {
         const res = await instance.post('/api/accounts/reset-password', { email, password, confirmPassword });
         return res.data;
@@ -128,6 +133,7 @@ export const AuthProvider = ({ children }) => {
             sendOtp,
             verifyOtp,
             forgotPassword,
+            verifyResetOtp,
             resetPassword
         }}>
             {children}
