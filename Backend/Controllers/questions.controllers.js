@@ -1,5 +1,7 @@
 import questionModel from "../Models/questions.models.js";
 import answerModel from "../Models/answers.models.js";
+import userModel from "../Models/users.models.js";
+import { extractQuestionsWithGemini } from "../Utils/AI/gemini.utils.js";
 
 const questionControllers = {
     createQuestion: async (req, res) => {
@@ -323,6 +325,48 @@ const questionControllers = {
             return res.status(500).json({
                 success: false,
                 message: "Error deleting question",
+                error: error.message
+            });
+        }
+    },
+    extractQuestionsFromFile: async (req, res) => {
+        try {
+            if (!req.file?.buffer) {
+                return res.status(400).json({
+                    success: false,
+                    message: "File is required"
+                });
+            }
+
+            const teacherProfile = await userModel
+                .findOne({ accountId: req.account._id })
+                .select("+geminiApiKey");
+
+            const apiKey = String(req.body?.geminiApiKey || teacherProfile?.geminiApiKey || '').trim();
+
+            if (!apiKey) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Gemini API key is required. Save it in your profile or send geminiApiKey with this request."
+                });
+            }
+
+            const questions = await extractQuestionsWithGemini({
+                apiKey,
+                fileBuffer: req.file.buffer,
+                mimeType: req.file.mimetype,
+                fileName: req.file.originalname
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Questions extracted successfully",
+                data: questions
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: "Error extracting questions from file",
                 error: error.message
             });
         }
