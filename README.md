@@ -1,6 +1,6 @@
 # Quizzle
 
-Quizzle is a full-stack quiz and test management app for teachers, students, and admins. It includes authentication, role-based dashboards, question and test workflows, file uploads for learning materials, and supporting OCR/AI utilities on the backend.
+Quizzle is a full-stack quiz and test management app for teachers, students, and admins. It includes authentication, role-based dashboards, question and test workflows, file uploads for learning materials, and Gemini-powered question extraction on the backend.
 
 ## Repository layout
 
@@ -34,15 +34,17 @@ Quizzle is a full-stack quiz and test management app for teachers, students, and
 - Account registration, OTP verification, password reset, and login.
 - Role-aware navigation for admin, teacher, student, and user accounts.
 - Question creation, answering, review, editing, and deletion.
+- AI-assisted question generation from uploaded files for teachers.
 - Test creation, test taking, grading, and result viewing.
 - User profile management and avatar upload.
+- Teacher Gemini API key storage in the profile settings flow.
 - File upload support for source material used by the app.
 
 ## Tech stack
 
 | Area | Stack |
 |---|---|
-| Backend | Node.js, Express, MongoDB, Mongoose, JWT, bcrypt, Nodemailer, Multer, Cloudinary, Tesseract, OpenAI/Ollama helpers |
+| Backend | Node.js, Express, MongoDB, Mongoose, JWT, bcrypt, Nodemailer, Multer, Cloudinary, Gemini helpers |
 | Frontend | React 19, Vite, React Router, Axios, Ant Design, MUI, React Toastify, Tailwind CSS |
 
 ## Getting started
@@ -109,6 +111,7 @@ npm run lint
 
 - `POST /api/questions`
 - `GET /api/questions`
+- `POST /api/questions/extract-from-file`
 - `POST /api/questions/answer/:id`
 - `PUT /api/questions/review/:id`
 - `PUT /api/questions/edit/:id`
@@ -144,9 +147,15 @@ Main route groups include:
 
 - Public: `/`, `/login`, `/register`, `/verify-otp`, `/forgot-password`, `/reset-password`, `/faq`
 - Admin: `/admin`
-- Teacher: `/teacher`, `/teacher/review`, `/teacher/grading`
+- Teacher: `/teacher`, `/teacher/review`, `/teacher/grading`, `/questions/generate-ai`
 - Student/user: `/student`, `/questions/new`, `/tests/:id/do`
 - Shared protected pages: `/profile`, `/questions`, `/tests`, `/tests/new`
+
+## Phase 5: AI integration
+
+- Teachers can save a Gemini API key from the profile flow.
+- Teachers can upload a file, preview extracted questions, and save selected items to the question bank.
+- The AI generation page is available at `/questions/generate-ai`.
 
 ## Notes
 
