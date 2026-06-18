@@ -9,16 +9,24 @@ export const UserProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const createUser = async ({ fullName, phoneNumber, dateOfBirth, gender }) => {
+    const createUser = async ({ fullName, phoneNumber, dateOfBirth, gender, geminiApiKey }) => {
         console.log('📝 [createUser] Starting user creation with:', { fullName, phoneNumber, dateOfBirth, gender });
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.post('/api/users', {
+            const payload = {
                 fullName,
                 phoneNumber,
                 dateOfBirth,
                 gender
+            };
+
+            if (String(geminiApiKey || '').trim()) {
+                payload.geminiApiKey = String(geminiApiKey).trim();
+            }
+
+            const res = await instance.post('/api/users', {
+                ...payload
             });
             console.log('✅ [createUser] Success! User created:', res.data);
             setUser(res.data.user);
@@ -76,17 +84,25 @@ export const UserProvider = ({ children }) => {
         }
     }
 
-    const updateUser = async (userId, { fullName, phoneNumber, dateOfBirth, gender }) => {
+    const updateUser = async (userId, { fullName, phoneNumber, dateOfBirth, gender, geminiApiKey }) => {
         console.log('✏️  [updateUser] Starting user update for user:', userId);
-        console.log('✏️  [updateUser] Update data:', { fullName, phoneNumber, dateOfBirth, gender });
+        console.log('✏️  [updateUser] Update data:', { fullName, phoneNumber, dateOfBirth, gender, geminiApiKey: Boolean(geminiApiKey) });
         setIsLoading(true);
         setError(null);
         try {
-            const res = await instance.put(`/api/users/${userId}`, {
+            const payload = {
                 fullName,
                 phoneNumber,
                 dateOfBirth,
                 gender
+            };
+
+            if (String(geminiApiKey || '').trim()) {
+                payload.geminiApiKey = String(geminiApiKey).trim();
+            }
+
+            const res = await instance.put(`/api/users/${userId}`, {
+                ...payload
             });
             console.log('✅ [updateUser] Success! User updated:', res.data);
             setUser(res.data.user);

@@ -10,7 +10,8 @@ const CreateProfile = () => {
         fullName: '',
         phoneNumber: '',
         dateOfBirth: '',
-        gender: ''
+        gender: '',
+        geminiApiKey: ''
     });
     const [avatar, setAvatar] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
@@ -68,7 +69,8 @@ const CreateProfile = () => {
                 fullName: formData.fullName,
                 phoneNumber: formData.phoneNumber,
                 dateOfBirth: formData.dateOfBirth,
-                gender: formData.gender
+                gender: formData.gender,
+                geminiApiKey: formData.geminiApiKey.trim() ? formData.geminiApiKey.trim() : undefined
             };
 
             const response = await createUser(userData);
@@ -178,6 +180,22 @@ const CreateProfile = () => {
                             <option value="Other">Other</option>
                         </select>
                     </div>
+
+                    {account?.role === 'teacher' && (
+                        <div className="form-group">
+                            <label htmlFor="geminiApiKey">Gemini API Key</label>
+                            <input
+                                type="password"
+                                id="geminiApiKey"
+                                name="geminiApiKey"
+                                value={formData.geminiApiKey}
+                                onChange={handleChange}
+                                placeholder="Optional, leave blank to skip"
+                                disabled={isLoading}
+                                autoComplete="new-password"
+                            />
+                        </div>
+                    )}
 
                     <div className="form-actions">
                         <button type="submit" disabled={isLoading} className="btn-primary">
