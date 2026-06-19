@@ -13,7 +13,7 @@ const normalizeGender = (gender) => {
 const userControllers = {
     createUser: async (req, res) => {
         const accountId = req.account._id
-        const { fullName, phoneNumber, dateOfBirth, gender } = req.body
+        const { fullName, phoneNumber, dateOfBirth, gender, geminiApiKey } = req.body
         
         console.log('👤 [createUser] Request received');
         console.log('👤 [createUser] Account ID:', accountId);
@@ -51,11 +51,13 @@ const userControllers = {
                 dateOfBirth,
                 gender: normalizeGender(gender),
                 age,
-                avatar
+                avatar,
+                ...(geminiApiKey !== undefined ? { geminiApiKey: String(geminiApiKey).trim() } : {})
             })
 
             await newUser.save()
             console.log('✅ [createUser] User created successfully:', newUser._id);
+            newUser.geminiApiKey = undefined;
             
             return res.status(201).json({ message: 'User created successfully', user: newUser })
         } catch (error) {
@@ -86,7 +88,7 @@ const userControllers = {
     },
     updateUser: async (req, res) => {
         const { id: userId } = req.params // Fixed: extract id from params
-        const { fullName, phoneNumber, dateOfBirth, gender } = req.body
+        const { fullName, phoneNumber, dateOfBirth, gender, geminiApiKey } = req.body
 
         const user = await userModel.findById(userId)
         if (!user) return res.status(404).json({ message: 'User not found!' })
@@ -101,6 +103,9 @@ const userControllers = {
             }
             if (gender !== undefined) {
                 updateData.gender = normalizeGender(gender)
+            }
+            if (geminiApiKey !== undefined) {
+                updateData.geminiApiKey = String(geminiApiKey).trim()
             }
             if (req.file?.path) {
                 updateData.avatar = req.file.path // Update avatar if file uploaded

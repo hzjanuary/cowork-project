@@ -10,7 +10,8 @@ const userSchema = new mongoose.Schema({
     avatar: {
         type: String,
         default: 'http://localhost:5174/images/default-img.jpg'
-    }
+    },
+    geminiApiKey: { type: String, default: '', select: false }
 }, { timestamps: true })
 
 const userModel = mongoose.model('Users', userSchema)
