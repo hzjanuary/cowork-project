@@ -81,7 +81,8 @@ const QuestionList = () => {
                 </div>
                 {filteredQuestions.map((question) => (
                     <div className="table-row question-table" key={question._id}>
-                        <strong>{question.questionText}</strong>
+                        {/* <strong>{question.questionText}</strong> */}
+                        <strong dangerouslySetInnerHTML={{ __html: question.questionText }} />
                         <span>{question.type?.replace('_', ' ')}</span>
                         <span className={`pill ${question.difficulty || 'easy'}`}>{question.difficulty || 'easy'}</span>
                         <span>{question.verified ? 'verified' : question.status || 'draft'}</span>

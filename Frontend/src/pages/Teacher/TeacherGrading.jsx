@@ -152,7 +152,12 @@ const TeacherGrading = () => {
                                             <span>Question {index + 1}</span>
                                             <span>{question?.type?.replace('_', ' ') || 'answer'}</span>
                                         </div>
-                                        <h3>{question?.questionText || 'Question unavailable'}</h3>
+                                        {/* <h3>{question?.questionText || 'Question unavailable'}</h3> */}
+                                        {question?.questionText ? (
+                                            <h3 dangerouslySetInnerHTML={{ __html: question.questionText }} />
+                                        ) : (
+                                            <h3>Question unavailable</h3>
+                                        )}
                                         <div className="student-answer-box">
                                             <span>Student answer</span>
                                             <p>{answer.studentAnswer || 'No answer submitted.'}</p>

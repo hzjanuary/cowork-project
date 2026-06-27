@@ -109,7 +109,8 @@ const TeacherQuestionReview = () => {
                         <article className="panel review-card" key={question._id}>
                             <div className="panel-heading">
                                 <div>
-                                    <h2>{question.questionText}</h2>
+                                    {/* <h2>{question.questionText}</h2> */}
+                                    <h2 dangerouslySetInnerHTML={{ __html: question.questionText }} />
                                     <span>{question.type?.replace('_', ' ')} · {question.difficulty || 'easy'} · {question.authorRole || 'student'}</span>
                                 </div>
                                 <span className="pill pending">Pending review</span>

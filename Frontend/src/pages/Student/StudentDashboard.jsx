@@ -301,7 +301,8 @@ const StudentDashboard = () => {
                         {practiceQuestions.map((question) => (
                             <button className="practice-list-item" key={question._id} onClick={() => startPractice(question._id)} type="button">
                                 <span className={`pill ${question.difficulty || 'easy'}`}>{question.difficulty || 'easy'}</span>
-                                <strong>{question.questionText}</strong>
+                                {/* <strong>{question.questionText}</strong> */}
+                                <strong dangerouslySetInnerHTML={{ __html: question.questionText }} />
                                 <small>{question.type?.replace('_', ' ')}</small>
                                 <RightOutlined />
                             </button>
@@ -325,7 +326,8 @@ const StudentDashboard = () => {
                             <span>{currentPracticeQuestion.type?.replace('_', ' ')}</span>
                             <span>{currentPracticeQuestion.difficulty || 'easy'}</span>
                         </div>
-                        <h3>{currentPracticeQuestion.questionText}</h3>
+                        {/* <h3>{currentPracticeQuestion.questionText}</h3> */}
+                        <h3 dangerouslySetInnerHTML={{ __html: currentPracticeQuestion.questionText }} />
                         {renderPracticeAnswerControls()}
                         {practiceFeedback && (
                             <div className={`practice-feedback ${practiceFeedback}`}>

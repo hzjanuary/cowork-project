@@ -116,7 +116,8 @@ const CreateTest = () => {
                                     onChange={() => toggleQuestion(question._id)}
                                 />
                                 <span>
-                                    <strong>{question.questionText}</strong>
+                                    {/* <strong>{question.questionText}</strong> */}
+                                    <strong dangerouslySetInnerHTML={{ __html: question.questionText }} />
                                     <small>{question.type?.replace('_', ' ')} · {question.difficulty || 'easy'} · {question.status || 'draft'}</small>
                                 </span>
                             </label>

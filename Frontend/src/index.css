@@ -1287,3 +1287,70 @@ label {
     grid-template-columns: 1fr;
   }
 }
+
+/* Tiptap Rich Text Editor and HTML Display Styles */
+strong, b {
+  font-weight: 700 !important;
+}
+
+u {
+  text-decoration: underline !important;
+}
+
+/* Ensure bullet/ordered lists display list styling */
+.ProseMirror ul, .question-details-container ul, .answer-question-container ul, .panel ul {
+  list-style-type: disc;
+  margin-left: 20px;
+  padding-left: 10px;
+}
+.ProseMirror ol, .question-details-container ol, .answer-question-container ol, .panel ol {
+  list-style-type: decimal;
+  margin-left: 20px;
+  padding-left: 10px;
+}
+
+/* Editor Container styling */
+.editor-container {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface-soft);
+  border-bottom: 1px solid var(--line);
+}
+
+.editor-toolbar button {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+.editor-toolbar button:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.ProseMirror {
+  min-height: 150px;
+  padding: 12px;
+  outline: none;
+}
+.ProseMirror p {
+  margin: 0 0 8px 0;
+}
+

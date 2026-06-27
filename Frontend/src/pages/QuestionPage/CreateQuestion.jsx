@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
 import {useQuestion} from '../../hooks/useQuestion.js';
 import { useAuth } from '../../hooks/useAuth.js';
+import RichTextEditor from '../../components/RichTextEditor.jsx';
 
 const defaultOptions = [
     { label: 'A', text: '', isCorrect: false },
@@ -76,11 +77,15 @@ const CreateQuestion = () => {
             <form className="form-panel" onSubmit={handleSubmit}>
                 <label>
                     Question text
-                    <textarea
+                    {/* <textarea
                         rows="5"
                         value={form.questionText}
                         onChange={(event) => updateField('questionText', event.target.value)}
                         placeholder="Paste or write the prompt students will answer"
+                    /> */}
+                    <RichTextEditor
+                        value={form.questionText}
+                        onChange={(html) => updateField('questionText', html)}
                     />
                 </label>
 

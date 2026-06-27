@@ -174,7 +174,8 @@ const Home = () => {
                         {questions.slice(0, 5).map((question) => (
                             <div className="list-row" key={question._id}>
                                 <span>{question.type?.replace('_', ' ')}</span>
-                                <strong>{question.questionText}</strong>
+                                {/* <strong>{question.questionText}</strong> */}
+                                <strong dangerouslySetInnerHTML={{ __html: question.questionText }} />
                                 <small>{question.difficulty || 'easy'}</small>
                             </div>
                         ))}

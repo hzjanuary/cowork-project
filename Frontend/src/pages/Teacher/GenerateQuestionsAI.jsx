@@ -163,7 +163,11 @@ const GenerateQuestionsAI = () => {
                                             onChange={() => toggleQuestion(itemId)}
                                         />
                                         <span style={{ display: 'grid', gap: 6 }}>
-                                            <strong>{question.questionText || 'Untitled question'}</strong>
+                                            {question.questionText ? (
+                                                <strong dangerouslySetInnerHTML={{ __html: question.questionText }} />
+                                            ) : (
+                                                <strong>Untitled question</strong>
+                                            )}
                                             <small>
                                                 {question.type?.replace('_', ' ')} · {question.difficulty || 'medium'}
                                                 {question.answer ? ` · Answer: ${question.answer}` : ''}

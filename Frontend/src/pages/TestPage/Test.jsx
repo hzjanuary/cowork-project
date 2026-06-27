@@ -147,7 +147,11 @@ const Test = () => {
                         {questions.map((question, index) => (
                             <div key={question._id} className="question-item">
                                 <div className="question-content">
-                                    <strong>{index + 1}. {question.questionText}</strong>
+                                    {/* <strong>{index + 1}. {question.questionText}</strong> */}
+                                    <strong style={{ display: 'inline-flex', alignItems: 'baseline', gap: '4px' }}>
+                                        <span>{index + 1}.</span>
+                                        <span dangerouslySetInnerHTML={{ __html: question.questionText }} />
+                                    </strong>
                                     <p><small>Type: {question.type} | Difficulty: {question.difficulty}</small></p>
                                 </div>
                                 <div className="question-actions">

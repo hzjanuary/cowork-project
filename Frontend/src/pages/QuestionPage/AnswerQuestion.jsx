@@ -96,7 +96,8 @@ const AnswerQuestion = () => {
             <div className="question-card">
                 {/* Question Header */}
                 <div className="question-header">
-                    <h2>{question.questionText}</h2>
+                    {/* <h2>{question.questionText}</h2> */}
+                    <h2 dangerouslySetInnerHTML={{ __html: question.questionText }} />
                     <div className="question-meta">
                         <span className="badge type">{question.type}</span>
                         <span className="badge difficulty">{question.difficulty}</span>

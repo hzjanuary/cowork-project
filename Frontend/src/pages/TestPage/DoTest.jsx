@@ -256,7 +256,8 @@ const DoTest = () => {
                         <span>{formatQuestionType(currentQuestion.type)}</span>
                         <span>{currentQuestion.difficulty || 'easy'}</span>
                     </div>
-                    <h2>{currentQuestion.questionText}</h2>
+                    {/* <h2>{currentQuestion.questionText}</h2> */}
+                    <h2 dangerouslySetInnerHTML={{ __html: currentQuestion.questionText }} />
 
                     {currentQuestion.type === 'multiple_choice' && (
                         <div className="answer-options">
