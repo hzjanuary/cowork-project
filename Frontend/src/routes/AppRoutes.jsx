@@ -10,7 +10,6 @@ import Profile from '../pages/Profile.jsx';
 import FAQ from '../pages/FAQ.jsx';
 import QuestionList from '../pages/QuestionPage/QuestionList.jsx';
 import CreateQuestion from '../pages/QuestionPage/CreateQuestion.jsx';
-import GenerateQuestionsAI from '../pages/Teacher/GenerateQuestionsAI.jsx';
 import TestList from '../pages/TestPage/TestList.jsx';
 import CreateTest from '../pages/TestPage/CreateTest.jsx';
 import DoTest from '../pages/TestPage/DoTest.jsx';
@@ -52,7 +51,6 @@ const AppRoutes = () => {
                     <Route path="/profile" element={<ProtectedRoutes><Profile /></ProtectedRoutes>} />
                     <Route path="/questions" element={<ProtectedRoutes roles={['teacher']}><QuestionList /></ProtectedRoutes>} />
                     <Route path="/questions/new" element={<ProtectedRoutes roles={['teacher', 'student', 'user']}><CreateQuestion /></ProtectedRoutes>} />
-                    <Route path="/questions/generate-ai" element={<ProtectedRoutes roles={['teacher']}><GenerateQuestionsAI /></ProtectedRoutes>} />
                     <Route path="/teacher/review" element={<ProtectedRoutes roles={['teacher']}><TeacherQuestionReview /></ProtectedRoutes>} />
                     <Route path="/teacher/grading" element={<ProtectedRoutes roles={['teacher']}><TeacherGrading /></ProtectedRoutes>} />
                     <Route path="/tests" element={<ProtectedRoutes><TestList /></ProtectedRoutes>} />

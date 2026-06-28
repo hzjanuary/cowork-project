@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../hooks/useUser.js';
-import { useAuth } from '../hooks/useAuth.js';
 import { toast } from 'react-toastify';
 // import './Profile.css';
 
@@ -10,14 +9,12 @@ const CreateProfile = () => {
         fullName: '',
         phoneNumber: '',
         dateOfBirth: '',
-        gender: '',
-        geminiApiKey: ''
+        gender: ''
     });
     const [avatar, setAvatar] = useState(null);
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const { createUser, updateAvatar } = useUser();
-    const { account } = useAuth();
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -69,8 +66,7 @@ const CreateProfile = () => {
                 fullName: formData.fullName,
                 phoneNumber: formData.phoneNumber,
                 dateOfBirth: formData.dateOfBirth,
-                gender: formData.gender,
-                geminiApiKey: formData.geminiApiKey.trim() ? formData.geminiApiKey.trim() : undefined
+                gender: formData.gender
             };
 
             const response = await createUser(userData);
@@ -180,22 +176,6 @@ const CreateProfile = () => {
                             <option value="Other">Other</option>
                         </select>
                     </div>
-
-                    {account?.role === 'teacher' && (
-                        <div className="form-group">
-                            <label htmlFor="geminiApiKey">Gemini API Key</label>
-                            <input
-                                type="password"
-                                id="geminiApiKey"
-                                name="geminiApiKey"
-                                value={formData.geminiApiKey}
-                                onChange={handleChange}
-                                placeholder="Optional, leave blank to skip"
-                                disabled={isLoading}
-                                autoComplete="new-password"
-                            />
-                        </div>
-                    )}
 
                     <div className="form-actions">
                         <button type="submit" disabled={isLoading} className="btn-primary">

@@ -8,7 +8,7 @@ import { useUser } from '../hooks/useUser.js';
 const Profile = () => {
     const { account } = useAuth();
     const { user, createUser, updateUser, getCurrentUser, changePassword, isLoading } = useUser();
-    const [profile, setProfile] = useState({ fullName: '', phoneNumber: '', dateOfBirth: '', gender: '', geminiApiKey: '' });
+    const [profile, setProfile] = useState({ fullName: '', phoneNumber: '', dateOfBirth: '', gender: '' });
     const [passwords, setPasswords] = useState({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
 
     useEffect(() => {
@@ -18,8 +18,7 @@ const Profile = () => {
                     fullName: currentUser.fullName || '',
                     phoneNumber: currentUser.phoneNumber || '',
                     dateOfBirth: currentUser.dateOfBirth ? currentUser.dateOfBirth.slice(0, 10) : '',
-                    gender: currentUser.gender || '',
-                    geminiApiKey: ''
+                    gender: currentUser.gender || ''
                 });
             })
             .catch(() => {});
@@ -37,15 +36,10 @@ const Profile = () => {
         }
 
         try {
-            const payload = {
-                ...profile,
-                geminiApiKey: profile.geminiApiKey.trim() ? profile.geminiApiKey.trim() : undefined
-            };
-
             if (user?._id) {
-                await updateUser(user._id, payload);
+                await updateUser(user._id, profile);
             } else {
-                await createUser(payload);
+                await createUser(profile);
             }
             toast.success('Profile saved.');
         } catch (error) {
@@ -101,18 +95,6 @@ const Profile = () => {
                             <option value="Other">Other</option>
                         </select>
                     </label>
-                    {account?.role === 'teacher' && (
-                        <label>
-                            Gemini API Key
-                            <input
-                                type="password"
-                                value={profile.geminiApiKey}
-                                autoComplete="new-password"
-                                onChange={(event) => updateProfile('geminiApiKey', event.target.value)}
-                                placeholder="Leave blank to keep existing key"
-                            />
-                        </label>
-                    )}
                     <button className="btn btn-primary" disabled={isLoading} type="submit">
                         <SaveOutlined /> Save profile
                     </button>

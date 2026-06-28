@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { DeleteOutlined, PlusOutlined, ReloadOutlined, RobotOutlined } from '@ant-design/icons';
+import { DeleteOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import {useQuestion} from '../../hooks/useQuestion.js';
 import { useAuth } from '../../hooks/useAuth.js';
 
@@ -48,9 +48,6 @@ const QuestionList = () => {
                     <button className="btn btn-secondary" onClick={loadQuestions} type="button">
                         <ReloadOutlined /> Refresh
                     </button>
-                    <Link className="btn btn-secondary" to="/questions/generate-ai">
-                        <RobotOutlined /> Generate via AI
-                    </Link>
                     <Link className="btn btn-primary" to="/questions/new">
                         <PlusOutlined /> New question
                     </Link>

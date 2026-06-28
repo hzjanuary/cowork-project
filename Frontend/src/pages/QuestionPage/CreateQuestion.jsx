@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { PlusOutlined, SaveOutlined } from '@ant-design/icons';
+import { PlusOutlined, SaveOutlined, UploadOutlined } from '@ant-design/icons';
 import {useQuestion} from '../../hooks/useQuestion.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import RichTextEditor from '../../components/RichTextEditor.jsx';
+import instance from '../../config/axiosConfig.js';
 
 const defaultOptions = [
     { label: 'A', text: '', isCorrect: false },
@@ -26,8 +27,24 @@ const CreateQuestion = () => {
         testId: ''
     });
     const [options, setOptions] = useState(defaultOptions);
+    const [isExtracting, setIsExtracting] = useState(false);
+    const fileInputRef = useRef(null);
 
     const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+
+    const htmlEscape = (text) => text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+    const textToHtml = (text) => {
+        return String(text || '')
+            .split(/\r?\n/)
+            .map((line) => `<p>${htmlEscape(line) || '<br />'}</p>`)
+            .join('');
+    };
 
     const updateOption = (index, field, value) => {
         setOptions((current) => current.map((option, optionIndex) => (
@@ -38,6 +55,38 @@ const CreateQuestion = () => {
     const addOption = () => {
         const nextLabel = String.fromCharCode(65 + options.length);
         setOptions((current) => [...current, { label: nextLabel, text: '', isCorrect: false }]);
+    };
+
+    const handleOcrUpload = async (event) => {
+        const file = event.target.files?.[0];
+        event.target.value = '';
+
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            setIsExtracting(true);
+            toast.info('Extracting text...');
+
+            const response = await instance.post('/api/fileuploads/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+
+            const extractedText = response.data?.ocrText || response.data?.file?.ocrText || '';
+            if (!extractedText.trim()) {
+                toast.error('OCR completed, but no text was extracted.');
+                return;
+            }
+
+            updateField('questionText', textToHtml(extractedText));
+            toast.success('Text extracted and inserted into the question editor.');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'OCR upload failed.');
+        } finally {
+            setIsExtracting(false);
+        }
     };
 
     const handleSubmit = async (event) => {
@@ -77,12 +126,19 @@ const CreateQuestion = () => {
             <form className="form-panel" onSubmit={handleSubmit}>
                 <label>
                     Question text
-                    {/* <textarea
-                        rows="5"
-                        value={form.questionText}
-                        onChange={(event) => updateField('questionText', event.target.value)}
-                        placeholder="Paste or write the prompt students will answer"
-                    /> */}
+                    <div className="action-row" style={{ marginTop: '0.5rem' }}>
+                        <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+                            <UploadOutlined /> {isExtracting ? 'Extracting...' : 'Upload Image for OCR'}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                onChange={handleOcrUpload}
+                                disabled={isExtracting}
+                                style={{ display: 'none' }}
+                            />
+                        </label>
+                    </div>
                     <RichTextEditor
                         value={form.questionText}
                         onChange={(html) => updateField('questionText', html)}
