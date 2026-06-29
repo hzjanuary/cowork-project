@@ -34,6 +34,7 @@ const CreateTest = () => {
                 : [...current, questionId]
         ));
     };
+    const selectableQuestions = questions.filter((question) => question.status !== 'rejected');
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -108,7 +109,7 @@ const CreateTest = () => {
                         <span>{selectedQuestionIds.length} selected</span>
                     </div>
                     <div className="compact-list">
-                        {questions.map((question) => (
+                        {selectableQuestions.map((question) => (
                             <label className="selector-row" key={question._id}>
                                 <input
                                     type="checkbox"
@@ -122,7 +123,7 @@ const CreateTest = () => {
                                 </span>
                             </label>
                         ))}
-                        {!questions.length && (
+                        {!selectableQuestions.length && (
                             <p className="muted">
                                 {questionsLoading ? 'Loading questions...' : 'No available questions. Create questions before creating a test.'}
                             </p>

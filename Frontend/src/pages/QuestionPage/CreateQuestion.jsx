@@ -124,26 +124,30 @@ const CreateQuestion = () => {
             </section>
 
             <form className="form-panel" onSubmit={handleSubmit}>
-                <label>
-                    Question text
+                <div>
+                    <label htmlFor="question-text-editor">Question text</label>
                     <div className="action-row" style={{ marginTop: '0.5rem' }}>
-                        <label className="btn btn-secondary" style={{ cursor: 'pointer' }}>
+                        <label htmlFor="ocr-image-upload" className="btn btn-secondary" style={{ cursor: 'pointer' }}>
                             <UploadOutlined /> {isExtracting ? 'Extracting...' : 'Upload Image for OCR'}
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept="image/*"
-                                onChange={handleOcrUpload}
-                                disabled={isExtracting}
-                                style={{ display: 'none' }}
-                            />
                         </label>
+                        <input
+                            id="ocr-image-upload"
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleOcrUpload}
+                            disabled={isExtracting}
+                            style={{ display: 'none' }}
+                        />
                     </div>
+                </div>
+
+                <div id="question-text-editor">
                     <RichTextEditor
                         value={form.questionText}
                         onChange={(html) => updateField('questionText', html)}
                     />
-                </label>
+                </div>
 
                 <div className="form-grid">
                     <label>
